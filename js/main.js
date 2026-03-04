@@ -1528,7 +1528,9 @@ function displayEvaluationResults(evaluation, formData) {
     document.getElementById('priceGrowth').textContent = evaluation.details.priceGrowth + '%';
     document.getElementById('occupancyGrowth').textContent = evaluation.details.occupancyGrowth + '%';
     
-    document.getElementById('paybackPeriod').textContent = evaluation.details.paybackPeriod + '个月';
+    const paybackMonths = parseFloat(evaluation.details.paybackPeriod);
+    const paybackYears = (paybackMonths / 12).toFixed(1);
+    document.getElementById('paybackPeriod').innerHTML = paybackMonths + '个月<br><span style="font-size: 0.9em; color: #94a3b8;">（' + paybackYears + '年）</span>';
     document.getElementById('paybackRating').textContent = evaluation.details.paybackRating;
     
     document.getElementById('equipmentRating').textContent = evaluation.details.equipmentRating;
