@@ -1529,8 +1529,9 @@ function displayEvaluationResults(evaluation, formData) {
     document.getElementById('occupancyGrowth').textContent = evaluation.details.occupancyGrowth + '%';
     
     const paybackMonths = parseFloat(evaluation.details.paybackPeriod);
-    const paybackYears = (paybackMonths / 12).toFixed(1);
-    document.getElementById('paybackPeriod').innerHTML = paybackMonths + '个月<br><span style="font-size: 0.9em; color: #94a3b8;">（' + paybackYears + '年）</span>';
+    const paybackDays = Math.round(paybackMonths * 30); // 转换为天数，1个月按30天计算
+    const paybackDaysFormatted = paybackDays.toLocaleString('en-US'); // 添加千位分隔符
+    document.getElementById('paybackPeriod').innerHTML = paybackMonths + '个月<br><span style="font-size: 0.9em; color: #94a3b8;">' + paybackDaysFormatted + '天</span>';
     document.getElementById('paybackRating').textContent = evaluation.details.paybackRating;
     
     document.getElementById('equipmentRating').textContent = evaluation.details.equipmentRating;
