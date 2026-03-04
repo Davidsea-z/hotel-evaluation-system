@@ -1312,7 +1312,7 @@ function evaluateProject() {
         formData.budget === 0 || formData.targetPrice === 0 || 
         formData.targetOccupancy === 0 || !formData.gpuLevel) {
         alert('请填写所有必填字段！');
-        return;
+        return false;
     }
     
     // 执行评估计算
@@ -1320,6 +1320,12 @@ function evaluateProject() {
     
     // 显示评估结果
     displayEvaluationResults(evaluation, formData);
+    
+    // 保存到历史记录
+    saveToHistory(formData, evaluation);
+    
+    // 返回评估结果
+    return { formData, evaluation };
 }
 
 // 计算评估分数
@@ -1655,3 +1661,248 @@ function resetEvaluationForm() {
     // 滚动到表单顶部
     document.getElementById('project-evaluation').scrollIntoView({ behavior: 'smooth' });
 }
+
+// ==========================================
+// 历史记录功能
+// ==========================================
+
+// 保存评估到历史记录
+function saveToHistory(projectData, evaluation) {
+    try {
+        // 获取现有历史记录
+        let history = JSON.parse(localStorage.getItem('evaluationHistory') || '[]');
+        
+        // 创建新记录
+        const record = {
+            id: Date.now(),
+            timestamp: new Date().toISOString(),
+            projectData: projectData,
+            evaluation: evaluation
+        };
+        
+        // 添加到历史记录开头
+        history.unshift(record);
+        
+        // 限制最多保存20条记录
+        if (history.length > 20) {
+            history = history.slice(0, 20);
+        }
+        
+        // 保存到 localStorage
+        localStorage.setItem('evaluationHistory', JSON.stringify(history));
+        
+        // 刷新历史记录显示
+        loadHistory();
+        
+        return true;
+    } catch (error) {
+        console.error('保存历史记录失败:', error);
+        return false;
+    }
+}
+
+// 加载并显示历史记录
+function loadHistory() {
+    try {
+        const history = JSON.parse(localStorage.getItem('evaluationHistory') || '[]');
+        const historyList = document.getElementById('historyList');
+        
+        if (!historyList) return;
+        
+        if (history.length === 0) {
+            historyList.innerHTML = `
+                <div class="history-empty">
+                    <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    <p>暂无评估记录</p>
+                    <p class="empty-hint">完成项目评估后，记录将自动保存在这里</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // 渲染历史记录
+        historyList.innerHTML = history.map(record => {
+            const date = new Date(record.timestamp);
+            const formattedDate = date.toLocaleDateString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            const { projectData, evaluation } = record;
+            const scoreClass = getScoreClass(evaluation.overall);
+            
+            return `
+                <div class="history-item" data-id="${record.id}">
+                    <div class="history-item-header">
+                        <div class="history-item-info">
+                            <h4 class="history-item-name">${projectData.name}</h4>
+                            <div class="history-item-meta">
+                                <span>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 0.875rem; height: 0.875rem;">
+                                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                        <circle cx="12" cy="10" r="3"/>
+                                    </svg>
+                                    ${projectData.location}
+                                </span>
+                                <span>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 0.875rem; height: 0.875rem;">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <polyline points="12 6 12 12 16 14"/>
+                                    </svg>
+                                    ${formattedDate}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="history-item-score">
+                            <div class="history-score-circle ${scoreClass}">
+                                ${evaluation.overall}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="history-item-stats">
+                        <div class="history-stat">
+                            <div class="history-stat-label">改造房间</div>
+                            <div class="history-stat-value">${projectData.renovationRooms}间</div>
+                        </div>
+                        <div class="history-stat">
+                            <div class="history-stat-label">总预算</div>
+                            <div class="history-stat-value">${projectData.budget}万元</div>
+                        </div>
+                        <div class="history-stat">
+                            <div class="history-stat-label">回本周期</div>
+                            <div class="history-stat-value">${evaluation.details.paybackPeriod}月</div>
+                        </div>
+                        <div class="history-stat">
+                            <div class="history-stat-label">年化ROI</div>
+                            <div class="history-stat-value">${evaluation.details.projectedROI}%</div>
+                        </div>
+                    </div>
+                    <div class="history-item-actions">
+                        <button class="history-action-btn btn-load" onclick="loadHistoryRecord(${record.id})">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                                <polyline points="9 22 9 12 15 12 15 22"/>
+                            </svg>
+                            加载数据
+                        </button>
+                        <button class="history-action-btn btn-delete" onclick="deleteHistoryRecord(${record.id})">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"/>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
+                            删除
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+    } catch (error) {
+        console.error('加载历史记录失败:', error);
+    }
+}
+
+// 根据分数返回样式类
+function getScoreClass(score) {
+    if (score >= 85) return 'score-excellent';
+    if (score >= 70) return 'score-good';
+    if (score >= 55) return 'score-medium';
+    return 'score-poor';
+}
+
+// 加载历史记录数据到表单
+function loadHistoryRecord(recordId) {
+    try {
+        const history = JSON.parse(localStorage.getItem('evaluationHistory') || '[]');
+        const record = history.find(r => r.id === recordId);
+        
+        if (!record) {
+            alert('记录不存在');
+            return;
+        }
+        
+        const data = record.projectData;
+        
+        // 填充表单数据（注意：formData使用的是简短的key名）
+        document.getElementById('projectName').value = data.name || '';
+        document.getElementById('projectLocation').value = data.location || '';
+        document.getElementById('hotelType').value = data.hotelType || '';
+        document.getElementById('totalRooms').value = data.totalRooms || '';
+        document.getElementById('renovationRooms').value = data.renovationRooms || '';
+        document.getElementById('beforePrice').value = data.beforePrice || '';
+        document.getElementById('beforeOccupancy').value = data.beforeOccupancy || '';
+        document.getElementById('beforeRevenue').value = data.beforeRevenue || '';
+        document.getElementById('renovationBudget').value = data.budget || '';
+        document.getElementById('equipmentRatio').value = data.equipmentRatio || '';
+        document.getElementById('targetPrice').value = data.targetPrice || '';
+        document.getElementById('targetOccupancy').value = data.targetOccupancy || '';
+        document.getElementById('gpuLevel').value = data.gpuLevel || '';
+        
+        // 滚动到表单
+        document.getElementById('project-evaluation').scrollIntoView({ behavior: 'smooth' });
+        
+        // 提示用户
+        setTimeout(() => {
+            alert('历史数据已加载到表单，您可以修改后重新评估');
+        }, 500);
+        
+    } catch (error) {
+        console.error('加载历史记录失败:', error);
+        alert('加载失败，请重试');
+    }
+}
+
+// 删除单条历史记录
+function deleteHistoryRecord(recordId) {
+    if (!confirm('确定要删除这条评估记录吗？')) {
+        return;
+    }
+    
+    try {
+        let history = JSON.parse(localStorage.getItem('evaluationHistory') || '[]');
+        history = history.filter(r => r.id !== recordId);
+        localStorage.setItem('evaluationHistory', JSON.stringify(history));
+        
+        // 刷新显示
+        loadHistory();
+        
+    } catch (error) {
+        console.error('删除历史记录失败:', error);
+        alert('删除失败，请重试');
+    }
+}
+
+// 清空所有历史记录
+function clearAllHistory() {
+    if (!confirm('确定要清空所有评估记录吗？此操作不可恢复！')) {
+        return;
+    }
+    
+    try {
+        localStorage.removeItem('evaluationHistory');
+        loadHistory();
+        alert('所有历史记录已清空');
+    } catch (error) {
+        console.error('清空历史记录失败:', error);
+        alert('清空失败，请重试');
+    }
+}
+
+// 页面加载完成后初始化历史记录
+document.addEventListener('DOMContentLoaded', function() {
+    // 加载历史记录
+    loadHistory();
+    
+    // 绑定清空历史按钮
+    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+    if (clearHistoryBtn) {
+        clearHistoryBtn.addEventListener('click', clearAllHistory);
+    }
+});

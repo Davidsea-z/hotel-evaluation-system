@@ -720,6 +720,39 @@
 
             </div>
 
+            <!-- 历史记录部分 -->
+            <div class="history-section" id="historySection">
+                <div class="history-header">
+                    <h2 class="history-title">
+                        <svg class="history-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        评估历史记录
+                    </h2>
+                    <div class="history-actions">
+                        <button id="clearHistoryBtn" class="btn-secondary">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"/>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
+                            清空记录
+                        </button>
+                    </div>
+                </div>
+                <div id="historyList" class="history-list">
+                    <div class="history-empty">
+                        <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="8" x2="12" y2="12"/>
+                            <line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                        <p>暂无评估记录</p>
+                        <p class="empty-hint">完成项目评估后，记录将自动保存在这里</p>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </section>
 
