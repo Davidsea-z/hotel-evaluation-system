@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>RevPAR Test</title>
+</head>
+<body>
+    <h1>RevPAR Calculation Test</h1>
+    
+    <div>
+        <label>Room Count: <input type="number" id="roomCount" value="100"></label><br>
+        <label>Occupancy Rate (%): <input type="number" id="occupancyRate" value="100"></label><br>
+        <label>Avg Price (ADR): <input type="number" id="avgPrice" value="200"></label><br>
+        <label>OTA Rate (%): <input type="number" id="otaRate" value="9"></label><br>
+        <label>Profit Share (%): <input type="number" id="profitShareRate" value="10"></label><br>
+        <button onclick="calculate()">Calculate</button>
+    </div>
+    
+    <h2>Results:</h2>
+    <p>RevPAR: <span id="revparResult">0</span> 元/间/天</p>
+    <p>PCF: <span id="pcfResult">0</span> 元/天</p>
+    
+    <script>
+        function calculate() {
+            const roomCount = parseFloat(document.getElementById('roomCount').value || 0);
+            const occupancyRate = parseFloat(document.getElementById('occupancyRate').value || 0) / 100;
+            const avgPrice = parseFloat(document.getElementById('avgPrice').value || 0);
+            const otaRate = parseFloat(document.getElementById('otaRate').value || 9) / 100;
+            const profitShareRate = parseFloat(document.getElementById('profitShareRate').value || 0) / 100;
+            
+            const revpar = avgPrice * occupancyRate * (1 - otaRate);
+            const pcfDaily = roomCount * revpar * profitShareRate;
+            
+            console.log('Calculate called');
+            console.log('avgPrice:', avgPrice);
+            console.log('occupancyRate:', occupancyRate);
+            console.log('otaRate:', otaRate);
+            console.log('revpar:', revpar);
+            console.log('pcfDaily:', pcfDaily);
+            
+            document.getElementById('revparResult').textContent = revpar.toFixed(2);
+            document.getElementById('pcfResult').textContent = pcfDaily.toFixed(2);
+        }
+        
+        // Auto-calculate on load
+        window.addEventListener('DOMContentLoaded', calculate);
+    </script>
+</body>
+</html>

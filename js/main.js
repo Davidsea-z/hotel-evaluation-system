@@ -761,14 +761,14 @@ function calculate() {
     
     // 根据分账频率设置标签
     if (irrFrequency === 'daily') {
-        irrLabel = 'MIRR日分账（年化）';
-        irrFormula = '每日回收按预期收益率复投，计算修正IRR';
+        irrLabel = 'IRR（考虑复投）';
+        irrFormula = '每日回收按预期收益率复投计算';
     } else if (irrFrequency === 'weekly') {
-        irrLabel = 'MIRR周分账（年化）';
-        irrFormula = '每周回收按预期收益率复投，计算修正IRR';
+        irrLabel = 'IRR（考虑复投）';
+        irrFormula = '每周回收按预期收益率复投计算';
     } else if (irrFrequency === 'biweekly') {
-        irrLabel = 'MIRR双周分账（年化）';
-        irrFormula = '每两周回收按预期收益率复投，计算修正IRR';
+        irrLabel = 'IRR（考虑复投）';
+        irrFormula = '每两周回收按预期收益率复投计算';
     }
     
     // 根据分账频率构造现金流
@@ -822,9 +822,9 @@ function calculate() {
     console.log('- 目标回收总额:', targetRecovery.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}), '元');
     console.log('- ROI:', roi.toFixed(2), '倍');
     console.log('- IRR分账频率:', irrFrequency);
-    console.log('- 使用 MIRR（修正IRR）- 再投资率:', (annualReturn * 100).toFixed(2) + '%');
+    console.log('- 使用 IRR（考虑复投）- 再投资率:', (annualReturn * 100).toFixed(2) + '%');
     console.log('- 现金流笔数:', cashFlows.length, '笔');
-    console.log('- MIRR(年化):', irrValue.toFixed(2), '%');
+    console.log('- IRR(年化):', irrValue.toFixed(2), '%');
     
     // 更新显示（含关键指标卡片中的 IRR 日分账）
     updateDisplay({
@@ -838,6 +838,7 @@ function calculate() {
         irrLabel: irrLabel,
         irrFormula: irrFormula,
         yitoResult: formatNumber(yitoPeriodDays),
+        yitoResultMonths: formatNumberWithDecimals(yitoPeriodMonths, 1),
         dailyIRR: dailyIRRDisplay
     });
 }
@@ -939,6 +940,11 @@ function updateDisplay(values) {
     const yitoElement = document.getElementById('yitoResult');
     if (yitoElement) {
         yitoElement.textContent = values.yitoResult;
+    }
+    
+    const yitoMonthsElement = document.getElementById('yitoResultMonths');
+    if (yitoMonthsElement) {
+        yitoMonthsElement.textContent = values.yitoResultMonths;
     }
     
     const targetRecoveryElement = document.getElementById('targetRecoveryResult');
