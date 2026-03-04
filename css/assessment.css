@@ -2,6 +2,40 @@
    投资评估模块样式
    ========================================== */
 
+/* 投资评估Section标题区域优化 */
+#investment-assessment .evaluation-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+#investment-assessment .section-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: #6366f1;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+#investment-assessment .section-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #1f2937;
+    margin-bottom: 1rem;
+    line-height: 1.2;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+#investment-assessment .section-description {
+    font-size: 1.125rem;
+    color: #4b5563;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+    font-weight: 500;
+}
+
 /* 评估表单容器 */
 .assessment-form-container {
     max-width: 1200px;
@@ -65,13 +99,15 @@
 .form-group label {
     display: block;
     font-size: 0.875rem;
-    font-weight: 500;
-    color: #374151;
+    font-weight: 600;
+    color: #1f2937;
     margin-bottom: 0.5rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .required {
     color: #ef4444;
+    font-weight: 700;
 }
 
 .form-group input[type="text"],
@@ -82,7 +118,11 @@
     border: 1px solid #d1d5db;
     border-radius: 8px;
     font-size: 0.875rem;
+    font-weight: 500;
+    color: #1f2937;
     transition: all 0.2s;
+    background: #ffffff;
+}
 }
 
 .form-group input:focus,
@@ -95,8 +135,10 @@
 .form-hint {
     display: block;
     font-size: 0.75rem;
+    font-weight: 500;
     color: #6b7280;
     margin-top: 0.25rem;
+    line-height: 1.5;
 }
 
 /* 网格布局 */
@@ -137,8 +179,10 @@
 }
 
 .hotel-item-title {
-    font-weight: 600;
+    font-weight: 700;
+    font-size: 0.9375rem;
     color: #1f2937;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .hotel-item-grid {
@@ -305,10 +349,12 @@
 
 .score-label {
     font-size: 0.875rem;
+    font-weight: 600;
     color: #6b7280;
     margin-bottom: 0.5rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .score-value {
@@ -320,12 +366,14 @@
     background-clip: text;
     line-height: 1;
     margin-bottom: 0.5rem;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
 .score-level {
     font-size: 1.25rem;
-    font-weight: 600;
+    font-weight: 700;
     color: #1f2937;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .score-breakdown {
@@ -378,14 +426,18 @@
 
 .dimension-card h4 {
     font-size: 0.875rem;
+    font-weight: 600;
     color: #6b7280;
     margin-bottom: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .dimension-score {
     font-size: 2rem;
-    font-weight: 700;
+    font-weight: 800;
     color: #6366f1;
+    text-shadow: 0 2px 4px rgba(99, 102, 241, 0.2);
 }
 
 /* 图表容器 */
@@ -399,10 +451,11 @@
 
 .chart-title {
     font-size: 1.25rem;
-    font-weight: 600;
+    font-weight: 700;
     color: #1f2937;
     margin-bottom: 1.5rem;
     text-align: center;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 /* 评估结论 */
@@ -425,9 +478,10 @@
     align-items: center;
     gap: 0.5rem;
     font-size: 1rem;
-    font-weight: 600;
+    font-weight: 700;
     color: #1f2937;
     margin-bottom: 1rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
 .conclusion-section h4 svg {
@@ -446,9 +500,10 @@
     padding: 0.5rem 0;
     padding-left: 1.5rem;
     position: relative;
-    color: #4b5563;
+    color: #374151;
     font-size: 0.875rem;
-    line-height: 1.5;
+    font-weight: 500;
+    line-height: 1.6;
 }
 
 .conclusion-section ul li::before {
