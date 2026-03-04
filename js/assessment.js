@@ -2,8 +2,22 @@
 // 投资评估模块 - JavaScript逻辑
 // ==========================================
 
-// 后端API配置
-const API_BASE_URL = 'http://localhost:5000/api';
+// 后端API配置 - 自动检测环境
+const API_BASE_URL = (() => {
+    // 如果是本地开发环境
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        return 'http://localhost:5000/api';
+    }
+    // 如果是沙箱环境，使用5000端口的公共URL
+    if (window.location.hostname.includes('sandbox.novita.ai')) {
+        // 将3000端口改为5000端口
+        return window.location.protocol + '//' + window.location.hostname.replace('3000-', '5000-') + '/api';
+    }
+    // 默认使用相对路径
+    return '/api';
+})();
+
+console.log('API_BASE_URL:', API_BASE_URL);
 
 // 存储草稿数据
 let assessmentDraftData = {};
