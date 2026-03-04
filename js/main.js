@@ -685,8 +685,17 @@ function calculate() {
     const profitShareRate = parseFloat(document.getElementById('profitShareRate')?.value || 0) / 100;
     
     // 第二部分：设备投资
-    const deviceCount = parseFloat(document.getElementById('deviceCount')?.value || 0);
     const equipmentCost = parseFloat(document.getElementById('equipmentCost')?.value || 0); // 万元
+    const totalRenovationCost = parseFloat(document.getElementById('totalRenovationCost')?.value || 0); // 万元
+    
+    // 计算电竞占总改造比例
+    const equipmentRatio = totalRenovationCost > 0 ? (equipmentCost / totalRenovationCost * 100) : 0;
+    
+    // 更新只读的比例显示字段
+    const equipmentRatioCalcInput = document.getElementById('equipmentRatioCalc');
+    if (equipmentRatioCalcInput) {
+        equipmentRatioCalcInput.value = equipmentRatio.toFixed(1);
+    }
     
     // 第三部分：投资核心指标参数
     const annualReturn = parseFloat(document.getElementById('expectedReturn')?.value || 18) / 100;
@@ -705,13 +714,8 @@ function calculate() {
     // 计算月PCF（元/月）
     const pcfMonthly = pcfDaily * 30;
     
-    // 计算电竞设备平均价格（元/台）
-    // 将万元转换为元
-    const equipmentCostYuan = equipmentCost * 10000;
-    const avgEquipmentPrice = deviceCount > 0 ? equipmentCostYuan / deviceCount : 0;
-    
-    // 计算总投资额（万元）
-    const totalInvestment = equipmentCost;
+    // 计算总投资额（使用改造总投入）
+    const totalInvestment = totalRenovationCost;
     const totalInvestmentYuan = totalInvestment * 10000; // 转换为元
     
     // === 投资核心指标计算 ===
@@ -789,9 +793,9 @@ function calculate() {
     console.log('- PCF(月):', pcfMonthly.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}), '元/月');
     console.log('');
     console.log('第二部分：设备投资');
-    console.log('- 电竞设备数量:', deviceCount, '台');
     console.log('- 电竞设备投入:', equipmentCost, '万元');
-    console.log('- 电竞设备平均价格:', Math.round(avgEquipmentPrice).toLocaleString('en-US'), '元/台');
+    console.log('- 改造总投入:', totalRenovationCost, '万元');
+    console.log('- 电竞占总改造比例:', equipmentRatio.toFixed(1), '%');
     console.log('- 总投资额:', totalInvestment.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}), '万元');
     console.log('');
     console.log('第三部分：投资核心指标');
@@ -809,7 +813,7 @@ function calculate() {
     // 更新显示（含关键指标卡片中的 IRR 日分账）
     updateDisplay({
         pcfResult: formatNumberWithDecimals(pcfDaily, 2),
-        avgEquipmentPrice: formatNumber(Math.round(avgEquipmentPrice)),
+        equipmentRatioDisplay: formatNumberWithDecimals(equipmentRatio, 1),
         totalInvestment2: formatNumberWithDecimals(totalInvestment, 2),
         targetRecoveryResult: formatNumber(Math.round(targetRecovery)),
         roiResult: formatNumberWithDecimals(roi, 2),
@@ -894,9 +898,9 @@ function updateDisplay(values) {
     }
     
     // 更新第二部分计算结果
-    const avgPriceElement = document.getElementById('avgEquipmentPrice');
-    if (avgPriceElement) {
-        avgPriceElement.textContent = values.avgEquipmentPrice;
+    const equipmentRatioElement = document.getElementById('equipmentRatioDisplay');
+    if (equipmentRatioElement) {
+        equipmentRatioElement.textContent = values.equipmentRatioDisplay;
     }
     
     const totalInvElement = document.getElementById('totalInvestment2');
