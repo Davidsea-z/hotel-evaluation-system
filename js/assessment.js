@@ -56,7 +56,7 @@ function loadAssessmentDraft() {
             document.getElementById('venue_1km').value = data.esports_venue_distribution?.['1km以内'] || 0;
             document.getElementById('venue_2km').value = data.esports_venue_distribution?.['1-2km'] || 0;
             document.getElementById('venue_3km').value = data.esports_venue_distribution?.['2-3km'] || 0;
-            document.getElementById('venue_remarks').value = data.esports_venue_distribution?.remarks || '';
+            document.getElementById('venue_remarks').value = data.esports_venue_distribution?.['备注'] || '';
             document.getElementById('business_area_remarks').value = data.business_area_remarks || '';
             
             // 恢复动态酒店表单
