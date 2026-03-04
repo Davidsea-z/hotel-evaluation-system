@@ -678,6 +678,8 @@ const defaultValues = {
 
 // 计算财务指标
 function calculate() {
+    console.log('Calculate function called'); // 调试：确认函数被调用
+    
     // 第一部分：核心输入
     const roomCount = parseFloat(document.getElementById('roomCount')?.value || 0);
     const occupancyRate = parseFloat(document.getElementById('occupancyRate')?.value || 0) / 100;
@@ -687,6 +689,13 @@ function calculate() {
     
     // 计算 RevPAR = ADR × OCC × (1 - OTA比例)
     const revpar = avgPrice * occupancyRate * (1 - otaRate);
+    
+    console.log('DEBUG - RevPAR Calculation:', {
+        avgPrice,
+        occupancyRate,
+        otaRate,
+        revpar
+    }); // 调试：显示 RevPAR 计算过程
     
     // 第二部分：设备投资
     const equipmentCost = parseFloat(document.getElementById('equipmentCost')?.value || 0); // 万元
@@ -899,10 +908,15 @@ function formatNumberWithDecimals(num, decimals) {
 
 // 更新显示
 function updateDisplay(values) {
+    console.log('UpdateDisplay called with values:', values); // 调试：显示传入的值
+    
     // 更新第一部分计算结果
     const revparElement = document.getElementById('revparResult');
     if (revparElement) {
         revparElement.textContent = values.revparResult;
+        console.log('RevPAR updated to:', values.revparResult); // 调试：确认更新
+    } else {
+        console.error('revparResult element not found!'); // 调试：元素未找到
     }
     
     const pcfElement = document.getElementById('pcfResult');
