@@ -599,18 +599,72 @@ document.addEventListener('DOMContentLoaded', function() {
 // ==========================================
 
 function setupSmartParse() {
-    const parseBtn = document.getElementById('parse-text-btn');
-    const clearBtn = document.getElementById('clear-parse-btn');
-    const parseInput = document.getElementById('smart-parse-input');
+    // 格式切换按钮
+    const textTab = document.getElementById('format-text-tab');
+    const jsonTab = document.getElementById('format-json-tab');
+    const textPanel = document.getElementById('text-format-panel');
+    const jsonPanel = document.getElementById('json-format-panel');
+    
+    // 文本格式元素
+    const parseTextBtn = document.getElementById('parse-text-btn');
+    const clearTextBtn = document.getElementById('clear-text-btn');
+    const textInput = document.getElementById('smart-parse-input');
+    
+    // JSON格式元素
+    const parseJsonBtn = document.getElementById('parse-json-btn');
+    const clearJsonBtn = document.getElementById('clear-json-btn');
+    const jsonInput = document.getElementById('json-parse-input');
+    const copyTemplateBtn = document.getElementById('copy-json-template-btn');
+    
+    // 结果提示
     const parseResult = document.getElementById('parse-result');
+    const parseError = document.getElementById('parse-error');
+    const errorMessage = document.getElementById('error-message');
     
-    if (!parseBtn || !parseInput) return;
+    // 切换到文本格式
+    if (textTab) {
+        textTab.addEventListener('click', () => {
+            textTab.style.background = '#3b82f6';
+            textTab.style.color = 'white';
+            textTab.style.borderColor = '#3b82f6';
+            jsonTab.style.background = 'white';
+            jsonTab.style.color = '#6b7280';
+            jsonTab.style.borderColor = '#e5e7eb';
+            textPanel.style.display = 'block';
+            jsonPanel.style.display = 'none';
+        });
+    }
     
-    // 解析按钮点击
-    parseBtn.addEventListener('click', () => {
-        const text = parseInput.value.trim();
+    // 切换到JSON格式
+    if (jsonTab) {
+        jsonTab.addEventListener('click', () => {
+            jsonTab.style.background = '#3b82f6';
+            jsonTab.style.color = 'white';
+            jsonTab.style.borderColor = '#3b82f6';
+            textTab.style.background = 'white';
+            textTab.style.color = '#6b7280';
+            textTab.style.borderColor = '#e5e7eb';
+            jsonPanel.style.display = 'block';
+            textPanel.style.display = 'none';
+        });
+    }
+    
+    // 获取JSON模板
+    if (copyTemplateBtn && jsonInput) {
+        copyTemplateBtn.addEventListener('click', () => {
+            const template = getJSONTemplate();
+            jsonInput.value = template;
+            alert('✓ JSON模板已加载！\n请根据您的项目实际情况修改数据');
+        });
+    }
+    
+    if (!parseTextBtn || !textInput) return;
+    
+    // 文本格式解析按钮
+    parseTextBtn.addEventListener('click', () => {
+        const text = textInput.value.trim();
         if (!text) {
-            alert('请先粘贴文本内容');
+            showError('请先粘贴文本内容');
             return;
         }
         
@@ -620,38 +674,151 @@ function setupSmartParse() {
             console.log('解析结果:', parsedData);
             
             fillFormWithParsedData(parsedData);
-            console.log('表单填充完成');
-            
-            // 显示成功提示
-            if (parseResult) {
-                parseResult.style.display = 'block';
-                setTimeout(() => {
-                    parseResult.style.display = 'none';
-                }, 3000);
-            }
-            
-            // 平滑滚动到表单
-            const formContainer = document.getElementById('assessment-form-container');
-            if (formContainer) {
-                formContainer.scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'start' 
-                });
-            }
+            showSuccess();
+            scrollToForm();
         } catch (error) {
             console.error('解析失败详情:', error);
-            console.error('错误堆栈:', error.stack);
-            alert('解析失败：' + error.message + '\n请检查文本格式或查看控制台获取详细信息');
+            showError('文本格式解析失败：' + error.message);
         }
     });
     
-    // 清空按钮
-    if (clearBtn) {
-        clearBtn.addEventListener('click', () => {
-            parseInput.value = '';
-            parseResult.style.display = 'none';
+    // JSON格式解析按钮
+    if (parseJsonBtn && jsonInput) {
+        parseJsonBtn.addEventListener('click', () => {
+            const jsonText = jsonInput.value.trim();
+            if (!jsonText) {
+                showError('请先粘贴JSON数据或点击"获取JSON模板"');
+                return;
+            }
+            
+            try {
+                console.log('开始解析JSON，长度:', jsonText.length);
+                const parsedData = JSON.parse(jsonText);
+                console.log('JSON解析结果:', parsedData);
+                
+                fillFormWithParsedData(parsedData);
+                showSuccess();
+                scrollToForm();
+            } catch (error) {
+                console.error('JSON解析失败:', error);
+                showError('JSON格式错误：' + error.message + '\n请检查JSON格式是否正确');
+            }
         });
     }
+    
+    // 清空文本按钮
+    if (clearTextBtn && textInput) {
+        clearTextBtn.addEventListener('click', () => {
+            textInput.value = '';
+            hideMessages();
+        });
+    }
+    
+    // 清空JSON按钮
+    if (clearJsonBtn && jsonInput) {
+        clearJsonBtn.addEventListener('click', () => {
+            jsonInput.value = '';
+            hideMessages();
+        });
+    }
+    
+    // 显示成功消息
+    function showSuccess() {
+        if (parseResult) {
+            parseResult.style.display = 'block';
+            if (parseError) parseError.style.display = 'none';
+            setTimeout(() => {
+                parseResult.style.display = 'none';
+            }, 3000);
+        }
+    }
+    
+    // 显示错误消息
+    function showError(msg) {
+        if (parseError && errorMessage) {
+            errorMessage.textContent = msg;
+            parseError.style.display = 'block';
+            if (parseResult) parseResult.style.display = 'none';
+        } else {
+            alert(msg);
+        }
+    }
+    
+    // 隐藏所有消息
+    function hideMessages() {
+        if (parseResult) parseResult.style.display = 'none';
+        if (parseError) parseError.style.display = 'none';
+    }
+    
+    // 滚动到表单
+    function scrollToForm() {
+        const formContainer = document.getElementById('assessment-form-container');
+        if (formContainer) {
+            formContainer.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+            });
+        }
+    }
+}
+
+/**
+ * 获取JSON模板
+ */
+function getJSONTemplate() {
+    return `{
+  "geographic_location": "位于未来科技城核心区，毗邻阿里巴巴西溪园区、杭师大仓前校区，西溪银泰城商圈、杭州西站交通枢纽环绕，地铁5号线直达",
+  
+  "core_customer_flow": {
+    "企业年轻员工": "周边阿里巴巴、网易、字节跳动等大厂，互联网从业者约5万人，年龄25-35岁，消费能力强",
+    "高校学生": "杭师大仓前校区距离2公里，学生总数约3万人，电竞社团活跃，周末娱乐需求大",
+    "商旅与参会客群": "西湖国际博览中心1公里，商务出差、会展参会人员密集，日均流量超1000人次"
+  },
+  
+  "competitive_pattern": {
+    "直接竞品": "3km范围内无电竞酒店，市场完全空白",
+    "潜在竞品": "2家传统网咖，装修陈旧，设备老化，客户体验差",
+    "替代娱乐": "电影院2家，KTV 3家，但与电竞客群重叠度低"
+  },
+  
+  "esports_venue_distribution": {
+    "1km以内": 5,
+    "1-2km": 8,
+    "2-3km": 3,
+    "备注": "周边电竞馆总数16家，市场需求旺盛但不饱和"
+  },
+  
+  "esports_hotel_distribution": [
+    {
+      "name": "XX电竞酒店",
+      "distance": 1.2,
+      "rooms": 50
+    },
+    {
+      "name": "YY电竞主题酒店",
+      "distance": 2.8,
+      "rooms": 30
+    }
+  ],
+  
+  "business_hotel_distribution": [
+    {
+      "name": "如家酒店",
+      "distance": 0.8,
+      "rooms": 80
+    },
+    {
+      "name": "汉庭酒店",
+      "distance": 1.5,
+      "rooms": 100
+    },
+    {
+      "name": "全季酒店",
+      "distance": 2.0,
+      "rooms": 120
+    }
+  ]
+}`;
 }
 
 /**
