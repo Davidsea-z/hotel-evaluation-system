@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON解析诊断工具</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #3b82f6;
+            padding-bottom: 10px;
+        }
+        textarea {
+            width: 100%;
+            min-height: 300px;
+            padding: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 10px 0;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .success {
+            background: #dcfce7;
+            border-left: 4px solid #10b981;
+            color: #065f46;
+        }
+        .error {
+            background: #fee2e2;
+            border-left: 4px solid #ef4444;
+            color: #991b1b;
+        }
+        .info {
+            background: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            color: #1e40af;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        th {
+            background: #f9fafb;
+            font-weight: 600;
+        }
+        .check-icon {
+            color: #10b981;
+            font-weight: bold;
+        }
+        .cross-icon {
+            color: #ef4444;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 JSON解析诊断工具</h1>
+        <p>粘贴你的JSON数据，点击"诊断"按钮检查格式和字段</p>
+        
+        <textarea id="jsonInput" placeholder='粘贴你的JSON数据，例如：
+{
+  "geographic_location": "位于未来科技城核心区...",
+  "core_customer_flow": {
+    "企业年轻员工": "...",
+    "高校学生": "...",
+    "商旅与参会客群": "..."
+  },
+  ...
+}'></textarea>
+        
+        <button onclick="diagnoseJSON()">🔍 诊断JSON</button>
+        <button onclick="loadTestJSON()">📋 加载测试JSON</button>
+        <button onclick="clearAll()">🗑️ 清空</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const testJSON = {
+            "geographic_location": "位于未来科技城核心区，毗邻阿里巴巴西溪园区、杭师大等，产业与高校资源密集。周边有西溪银泰城等商业配套。距离杭州西站较近，可承接部分商旅客流。",
+            "core_customer_flow": {
+                "企业年轻员工": "阿里巴巴及周边互联网科技公司年轻员工群体密集，约5万人，年龄25-35岁，收入水平高、游戏需求明确，消费能力强。",
+                "高校学生": "杭州师范大学等高校学生群体，学生约3万人，距离2公里，是电竞重度用户，消费注重性价比与社交体验。",
+                "商旅与参会客群": "未来科技城展会、培训活动频繁，西湖国际博览中心距离1公里，年轻商旅人士对特色主题住宿接受度高。"
+            },
+            "competitive_pattern": {
+                "直接竞品": "周边3公里内已有数家电竞酒店，但多为经济型（均价200元以下），中高端定位存在市场空白。",
+                "潜在竞品": "传统中端酒店（如亚朵、全季）是替代性竞争，但未提供专业电竞体验。",
+                "替代娱乐": "高端网吧与家庭娱乐。"
+            },
+            "esports_venue_distribution": {
+                "1km以内": 6,
+                "1-2km": 9,
+                "2-3km": 8,
+                "备注": "附近网吧较多，项目周边以连锁为主，配置和价位均较高"
+            },
+            "esports_hotel_distribution": [
+                {"name": "梦之舟电竞主题公寓", "distance": 0.6, "rooms": 19},
+                {"name": "企鹅电竞公寓", "distance": 0.7, "rooms": 22},
+                {"name": "网鱼电竞酒店（EFC 未来科技城店）", "distance": 1.9, "rooms": 38}
+            ],
+            "business_hotel_distribution": [
+                {"name": "美豪酒店（阿里西溪园区店）", "distance": 0.2, "rooms": 90},
+                {"name": "云酒店（未来科技城杭师大店）", "distance": 0.3, "rooms": 81},
+                {"name": "维也纳国际酒店（未来科技城店）", "distance": 0.4, "rooms": 281}
+            ]
+        };
+
+        function loadTestJSON() {
+            document.getElementById('jsonInput').value = JSON.stringify(testJSON, null, 2);
+            diagnoseJSON();
+        }
+
+        function clearAll() {
+            document.getElementById('jsonInput').value = '';
+            document.getElementById('result').innerHTML = '';
+        }
+
+        function diagnoseJSON() {
+            const input = document.getElementById('jsonInput').value.trim();
+            const resultDiv = document.getElementById('result');
+            
+            if (!input) {
+                resultDiv.innerHTML = '<div class="error">❌ 错误：没有输入JSON数据</div>';
+                return;
+            }
+
+            let result = '<div class="info">📊 诊断结果</div>\n';
+            
+            // 步骤1：JSON格式验证
+            result += '<h3>步骤1：JSON格式验证</h3>\n';
+            let data;
+            try {
+                data = JSON.parse(input);
+                result += '<div class="success">✅ JSON格式正确</div>\n';
+                result += `<div class="info">字符数：${input.length}\n`;
+                result += `字段数：${Object.keys(data).length}</div>\n`;
+            } catch (error) {
+                result += `<div class="error">❌ JSON格式错误：${error.message}</div>\n`;
+                resultDiv.innerHTML = result;
+                return;
+            }
+
+            // 步骤2：必需字段检查
+            result += '<h3>步骤2：必需字段检查</h3>\n';
+            const requiredFields = {
+                'geographic_location': '地理位置',
+                'core_customer_flow': '核心客流',
+                'competitive_pattern': '竞争格局',
+                'esports_venue_distribution': '电竞馆分布',
+                'esports_hotel_distribution': '电竞酒店列表',
+                'business_hotel_distribution': '商务酒店列表'
+            };
+
+            result += '<table>\n';
+            result += '<tr><th>字段</th><th>中文名</th><th>状态</th><th>数据类型</th></tr>\n';
+            
+            let allFieldsPresent = true;
+            for (const [field, name] of Object.entries(requiredFields)) {
+                const exists = data.hasOwnProperty(field);
+                const type = exists ? typeof data[field] : '-';
+                const typeInfo = Array.isArray(data[field]) ? 'Array' : type;
+                const icon = exists ? '<span class="check-icon">✓</span>' : '<span class="cross-icon">✗</span>';
+                result += `<tr><td>${field}</td><td>${name}</td><td>${icon}</td><td>${typeInfo}</td></tr>\n`;
+                if (!exists) allFieldsPresent = false;
+            }
+            result += '</table>\n';
+
+            if (!allFieldsPresent) {
+                result += '<div class="error">❌ 缺少必需字段</div>\n';
+                resultDiv.innerHTML = result;
+                return;
+            }
+
+            // 步骤3：核心客流子字段检查
+            result += '<h3>步骤3：核心客流子字段检查</h3>\n';
+            const coreFlowFields = {
+                '企业年轻员工': 40,
+                '高校学生': 35,
+                '商旅与参会客群': 25
+            };
+
+            result += '<table>\n';
+            result += '<tr><th>字段</th><th>权重</th><th>状态</th><th>字符数</th><th>预估分数</th></tr>\n';
+            
+            for (const [field, weight] of Object.entries(coreFlowFields)) {
+                const exists = data.core_customer_flow && data.core_customer_flow.hasOwnProperty(field);
+                const value = exists ? data.core_customer_flow[field] : '';
+                const length = value.length;
+                let score = 0;
+                if (length === 0) score = 0;
+                else if (length < 20) score = 0;
+                else if (length < 50) score = 6;
+                else if (length <= 100) score = 9;
+                else score = 9;
+                
+                const icon = exists ? '<span class="check-icon">✓</span>' : '<span class="cross-icon">✗</span>';
+                result += `<tr><td>${field}</td><td>${weight}%</td><td>${icon}</td><td>${length}</td><td>${score}分</td></tr>\n`;
+            }
+            result += '</table>\n';
+
+            // 步骤4：竞争格局子字段检查
+            result += '<h3>步骤4：竞争格局子字段检查</h3>\n';
+            const competitiveFields = ['直接竞品', '潜在竞品', '替代娱乐'];
+            
+            result += '<table>\n';
+            result += '<tr><th>字段</th><th>状态</th><th>字符数</th></tr>\n';
+            
+            for (const field of competitiveFields) {
+                const exists = data.competitive_pattern && data.competitive_pattern.hasOwnProperty(field);
+                const value = exists ? data.competitive_pattern[field] : '';
+                const length = value.length;
+                const icon = exists ? '<span class="check-icon">✓</span>' : '<span class="cross-icon">✗</span>';
+                result += `<tr><td>${field}</td><td>${icon}</td><td>${length}</td></tr>\n`;
+            }
+            result += '</table>\n';
+
+            // 步骤5：电竞馆分布检查
+            result += '<h3>步骤5：电竞馆分布检查</h3>\n';
+            const venueFields = ['1km以内', '1-2km', '2-3km', '备注'];
+            
+            result += '<table>\n';
+            result += '<tr><th>字段</th><th>状态</th><th>值</th><th>类型</th></tr>\n';
+            
+            for (const field of venueFields) {
+                const exists = data.esports_venue_distribution && data.esports_venue_distribution.hasOwnProperty(field);
+                const value = exists ? data.esports_venue_distribution[field] : '';
+                const type = typeof value;
+                const icon = exists ? '<span class="check-icon">✓</span>' : '<span class="cross-icon">✗</span>';
+                result += `<tr><td>${field}</td><td>${icon}</td><td>${value}</td><td>${type}</td></tr>\n`;
+            }
+            result += '</table>\n';
+
+            // 步骤6：酒店列表检查
+            result += '<h3>步骤6：酒店列表检查</h3>\n';
+            result += '<table>\n';
+            result += '<tr><th>类型</th><th>数量</th><th>示例</th></tr>\n';
+            
+            const esportsCount = Array.isArray(data.esports_hotel_distribution) ? data.esports_hotel_distribution.length : 0;
+            const businessCount = Array.isArray(data.business_hotel_distribution) ? data.business_hotel_distribution.length : 0;
+            
+            const esportsExample = esportsCount > 0 ? JSON.stringify(data.esports_hotel_distribution[0], null, 2) : '无';
+            const businessExample = businessCount > 0 ? JSON.stringify(data.business_hotel_distribution[0], null, 2) : '无';
+            
+            result += `<tr><td>电竞酒店</td><td>${esportsCount}家</td><td><pre>${esportsExample}</pre></td></tr>\n`;
+            result += `<tr><td>商务酒店</td><td>${businessCount}家</td><td><pre>${businessExample}</pre></td></tr>\n`;
+            result += '</table>\n';
+
+            // 最终结论
+            result += '<h3>✅ 诊断完成</h3>\n';
+            result += '<div class="success">\n';
+            result += `所有必需字段：✓ 完整\n`;
+            result += `核心客流字段：✓ ${Object.keys(coreFlowFields).filter(f => data.core_customer_flow && data.core_customer_flow[f]).length}/3\n`;
+            result += `竞争格局字段：✓ ${competitiveFields.filter(f => data.competitive_pattern && data.competitive_pattern[f]).length}/3\n`;
+            result += `电竞酒店列表：✓ ${esportsCount}家\n`;
+            result += `商务酒店列表：✓ ${businessCount}家\n`;
+            result += '\n<strong>结论：JSON数据格式正确，可以提交到系统进行评估！</strong>\n';
+            result += '</div>\n';
+
+            resultDiv.innerHTML = result;
+        }
+    </script>
+</body>
+</html>
