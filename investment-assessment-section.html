@@ -1,0 +1,380 @@
+
+    <!-- 投资评估系统（新模块） -->
+    <section id="investment-assessment" class="section section-light" aria-label="项目投资评估系统">
+        <div class="section-container">
+            
+            <!-- 标题区 -->
+            <div class="evaluation-header">
+                <div class="section-label">INVESTMENT ASSESSMENT · 项目投资价值评估</div>
+                <h2 class="section-title">六维度智能评估系统</h2>
+                <p class="section-description">填写6大核心字段，AI智能分析项目投资价值与风险</p>
+            </div>
+
+            <!-- 评估表单容器 -->
+            <div id="assessment-form-container" class="assessment-form-container">
+                <form id="investmentAssessmentForm" class="investment-assessment-form">
+                    
+                    <!-- 字段1: 地理位置 -->
+                    <div class="assessment-form-section">
+                        <h3 class="assessment-section-title">
+                            <span class="section-number">1</span>
+                            <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                <circle cx="12" cy="10" r="3"/>
+                            </svg>
+                            地理位置
+                        </h3>
+                        <div class="form-group">
+                            <label for="geographic_location">详细描述项目地理位置优势 <span class="required">*</span></label>
+                            <textarea 
+                                id="geographic_location" 
+                                name="geographic_location"
+                                rows="4" 
+                                placeholder="示例：位于未来科技城核心区，毗邻阿里巴巴西溪园区、杭师大等，产业与高校资源密集，西溪银泰城商圈、杭州西站交通枢纽环绕..."
+                                required
+                                minlength="10"
+                            ></textarea>
+                            <small class="form-hint">请至少填写10个字符，包括关键地标、交通配套、产业集聚等信息</small>
+                        </div>
+                    </div>
+
+                    <!-- 字段2: 核心客流 -->
+                    <div class="assessment-form-section">
+                        <h3 class="assessment-section-title">
+                            <span class="section-number">2</span>
+                            <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                            </svg>
+                            核心客流
+                        </h3>
+                        <div class="customer-flow-grid">
+                            <div class="form-group">
+                                <label for="customer_enterprise">企业年轻员工</label>
+                                <textarea 
+                                    id="customer_enterprise" 
+                                    name="customer_enterprise"
+                                    rows="3" 
+                                    placeholder="描述周边企业员工构成、消费能力等..."
+                                ></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="customer_student">高校学生</label>
+                                <textarea 
+                                    id="customer_student" 
+                                    name="customer_student"
+                                    rows="3" 
+                                    placeholder="描述周边高校学生群体、消费习惯等..."
+                                ></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="customer_business">商旅与参会客群</label>
+                                <textarea 
+                                    id="customer_business" 
+                                    name="customer_business"
+                                    rows="3" 
+                                    placeholder="描述商务差旅、会议活动客群情况..."
+                                ></textarea>
+                            </div>
+                        </div>
+                        <small class="form-hint">至少填写一项客群信息</small>
+                    </div>
+
+                    <!-- 字段3: 竞争格局 -->
+                    <div class="assessment-form-section">
+                        <h3 class="assessment-section-title">
+                            <span class="section-number">3</span>
+                            <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                            </svg>
+                            竞争格局
+                        </h3>
+                        <div class="competitive-pattern-grid">
+                            <div class="form-group">
+                                <label for="competitive_direct">直接竞品（电竞酒店）</label>
+                                <textarea 
+                                    id="competitive_direct" 
+                                    name="competitive_direct"
+                                    rows="3" 
+                                    placeholder="描述周边电竞酒店情况：数量、距离、竞争态势..."
+                                ></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="competitive_potential">潜在竞品（高端网咖）</label>
+                                <textarea 
+                                    id="competitive_potential" 
+                                    name="competitive_potential"
+                                    rows="3" 
+                                    placeholder="描述周边高端网咖、电竞馆等情况..."
+                                ></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="competitive_substitute">替代娱乐</label>
+                                <textarea 
+                                    id="competitive_substitute" 
+                                    name="competitive_substitute"
+                                    rows="3" 
+                                    placeholder="描述周边其他娱乐设施：KTV、影院、酒吧等..."
+                                ></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 字段4: 电竞馆分布 -->
+                    <div class="assessment-form-section">
+                        <h3 class="assessment-section-title">
+                            <span class="section-number">4</span>
+                            <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                                <line x1="8" y1="21" x2="16" y2="21"/>
+                                <line x1="12" y1="17" x2="12" y2="21"/>
+                            </svg>
+                            电竞馆分布 <span class="required">*</span>
+                        </h3>
+                        <div class="venue-distribution-grid">
+                            <div class="form-group">
+                                <label for="venue_1km">1km以内（家）</label>
+                                <input 
+                                    type="number" 
+                                    id="venue_1km" 
+                                    name="venue_1km"
+                                    min="0" 
+                                    value="0"
+                                    placeholder="0"
+                                    required
+                                />
+                            </div>
+                            <div class="form-group">
+                                <label for="venue_2km">1-2km（家）</label>
+                                <input 
+                                    type="number" 
+                                    id="venue_2km" 
+                                    name="venue_2km"
+                                    min="0" 
+                                    value="0"
+                                    placeholder="0"
+                                    required
+                                />
+                            </div>
+                            <div class="form-group">
+                                <label for="venue_3km">2-3km（家）</label>
+                                <input 
+                                    type="number" 
+                                    id="venue_3km" 
+                                    name="venue_3km"
+                                    min="0" 
+                                    value="0"
+                                    placeholder="0"
+                                    required
+                                />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="venue_remarks">备注说明</label>
+                            <textarea 
+                                id="venue_remarks" 
+                                name="venue_remarks"
+                                rows="2" 
+                                placeholder="补充说明电竞馆分布特点、规模等..."
+                            ></textarea>
+                        </div>
+                    </div>
+
+                    <!-- 字段5: 电竞酒店分布 -->
+                    <div class="assessment-form-section">
+                        <h3 class="assessment-section-title">
+                            <span class="section-number">5</span>
+                            <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                                <polyline points="9 22 9 12 15 12 15 22"/>
+                            </svg>
+                            电竞酒店分布
+                        </h3>
+                        <div id="esports-hotels-container">
+                            <!-- 动态酒店表单将在这里插入 -->
+                        </div>
+                        <button type="button" class="btn-add-item" onclick="addEsportsHotel()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"/>
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            添加电竞酒店
+                        </button>
+                    </div>
+
+                    <!-- 字段6: 同档次商务酒店分布 -->
+                    <div class="assessment-form-section">
+                        <h3 class="assessment-section-title">
+                            <span class="section-number">6</span>
+                            <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                <circle cx="12" cy="10" r="3"/>
+                            </svg>
+                            同档次商务酒店分布
+                        </h3>
+                        <div id="business-hotels-container">
+                            <!-- 动态酒店表单将在这里插入 -->
+                        </div>
+                        <button type="button" class="btn-add-item" onclick="addBusinessHotel()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"/>
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            添加商务酒店
+                        </button>
+                        <div class="form-group" style="margin-top: 1rem;">
+                            <label for="business_area_remarks">区域分布备注</label>
+                            <textarea 
+                                id="business_area_remarks" 
+                                name="business_area_remarks"
+                                rows="2" 
+                                placeholder="描述商务酒店的区域分布特点..."
+                            ></textarea>
+                        </div>
+                    </div>
+
+                    <!-- 提交按钮 -->
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="resetAssessmentForm()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="1 4 1 10 7 10"/>
+                                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                            </svg>
+                            重置表单
+                        </button>
+                        <button type="submit" class="btn-primary" id="submitAssessmentBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                <polyline points="22 4 12 14.01 9 11.01"/>
+                            </svg>
+                            开始评估
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+
+            <!-- 评估结果展示容器（初始隐藏） -->
+            <div id="assessment-result-container" class="assessment-result-container" style="display: none;">
+                
+                <!-- 返回按钮 -->
+                <button class="btn-back" onclick="backToAssessmentForm()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="19" y1="12" x2="5" y2="12"/>
+                        <polyline points="12 19 5 12 12 5"/>
+                    </svg>
+                    返回表单
+                </button>
+
+                <!-- 综合得分卡片 -->
+                <div class="result-score-card">
+                    <div class="score-main">
+                        <div class="score-label">综合投资价值得分</div>
+                        <div class="score-value" id="comprehensiveScore">0.0</div>
+                        <div class="score-level" id="valueLevel">评估中...</div>
+                    </div>
+                    <div class="score-breakdown">
+                        <div class="score-item">
+                            <span class="score-item-label">优势维度</span>
+                            <span class="score-item-value" id="advantageScore">0.0</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="score-item-label">风险维度</span>
+                            <span class="score-item-value" id="riskScore">0.0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 维度得分详情 -->
+                <div class="result-dimensions-grid">
+                    <div class="dimension-card">
+                        <h4>地理位置</h4>
+                        <div class="dimension-score" id="dimScore1">0.0</div>
+                    </div>
+                    <div class="dimension-card">
+                        <h4>核心客流</h4>
+                        <div class="dimension-score" id="dimScore2">0.0</div>
+                    </div>
+                    <div class="dimension-card">
+                        <h4>竞争格局</h4>
+                        <div class="dimension-score" id="dimScore3">0.0</div>
+                    </div>
+                    <div class="dimension-card">
+                        <h4>电竞馆分布</h4>
+                        <div class="dimension-score" id="dimScore4">0.0</div>
+                    </div>
+                    <div class="dimension-card">
+                        <h4>电竞酒店分布</h4>
+                        <div class="dimension-score" id="dimScore5">0.0</div>
+                    </div>
+                    <div class="dimension-card">
+                        <h4>商务酒店分布</h4>
+                        <div class="dimension-score" id="dimScore6">0.0</div>
+                    </div>
+                </div>
+
+                <!-- 雷达图 -->
+                <div class="result-chart-container">
+                    <h3 class="chart-title">维度得分雷达图</h3>
+                    <canvas id="radarChart"></canvas>
+                </div>
+
+                <!-- 评估结论 -->
+                <div class="result-conclusion">
+                    <div class="conclusion-section">
+                        <h4>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            项目优势
+                        </h4>
+                        <ul id="strengthsList"></ul>
+                    </div>
+                    <div class="conclusion-section">
+                        <h4>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                <line x1="12" y1="9" x2="12" y2="13"/>
+                                <line x1="12" y1="17" x2="12.01" y2="17"/>
+                            </svg>
+                            风险提示
+                        </h4>
+                        <ul id="risksList"></ul>
+                    </div>
+                    <div class="conclusion-section">
+                        <h4>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 20h9"/>
+                                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                            </svg>
+                            优化建议
+                        </h4>
+                        <ul id="suggestionsList"></ul>
+                    </div>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="result-actions">
+                    <button class="btn-secondary" onclick="backToAssessmentForm()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="1 4 1 10 7 10"/>
+                            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                        </svg>
+                        重新评估
+                    </button>
+                    <button class="btn-primary" onclick="exportAssessmentReport()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        导出报告
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+    </section>
