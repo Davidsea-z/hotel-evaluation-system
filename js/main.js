@@ -1922,4 +1922,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (clearHistoryBtn) {
         clearHistoryBtn.addEventListener('click', clearAllHistory);
     }
+    
+    // 初始化计算，显示默认值的结果
+    calculate();
 });
