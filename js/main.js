@@ -682,7 +682,11 @@ function calculate() {
     const roomCount = parseFloat(document.getElementById('roomCount')?.value || 0);
     const occupancyRate = parseFloat(document.getElementById('occupancyRate')?.value || 0) / 100;
     const avgPrice = parseFloat(document.getElementById('avgPrice')?.value || 0);
+    const otaRate = parseFloat(document.getElementById('otaRate')?.value || 9) / 100;
     const profitShareRate = parseFloat(document.getElementById('profitShareRate')?.value || 0) / 100;
+    
+    // 计算 RevPAR = ADR × OCC × (1 - OTA比例)
+    const revpar = avgPrice * occupancyRate * (1 - otaRate);
     
     // 第二部分：设备投资
     const equipmentCost = parseFloat(document.getElementById('equipmentCost')?.value || 0); // 万元
@@ -708,8 +712,9 @@ function calculate() {
     const monthlyReturn = annualReturn / 12;
     
     // 计算 PCF（滴灌通分成预期现金流）- 元/天
-    // PCF = 房间数量 × 入住率 × 平均房价 × 分成比例
-    const pcfDaily = roomCount * occupancyRate * avgPrice * profitShareRate;
+    // PCF = 房间数量 × RevPAR × 分成比例
+    // 其中 RevPAR = ADR × OCC × (1 - OTA比例)
+    const pcfDaily = roomCount * revpar * profitShareRate;
     
     // 计算月PCF（元/月）
     const pcfMonthly = pcfDaily * 30;
@@ -787,7 +792,9 @@ function calculate() {
     console.log('第一部分：核心输入估计PCF');
     console.log('- 房间数量:', roomCount, '间');
     console.log('- 入住率:', (occupancyRate * 100).toFixed(2), '%');
-    console.log('- 平均房价:', avgPrice, '元/间/天');
+    console.log('- 平均房价 ADR:', avgPrice, '元/间/天');
+    console.log('- OTA比例:', (otaRate * 100).toFixed(1), '%');
+    console.log('- RevPAR:', revpar.toFixed(2), '元/间/天');
     console.log('- 分成比例:', (profitShareRate * 100).toFixed(2), '%');
     console.log('- PCF(日):', pcfDaily.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}), '元/天');
     console.log('- PCF(月):', pcfMonthly.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}), '元/月');
@@ -812,6 +819,7 @@ function calculate() {
     
     // 更新显示（含关键指标卡片中的 IRR 日分账）
     updateDisplay({
+        revparResult: formatNumberWithDecimals(revpar, 2),
         pcfResult: formatNumberWithDecimals(pcfDaily, 2),
         equipmentRatioDisplay: formatNumberWithDecimals(equipmentRatio, 1),
         totalInvestment2: formatNumberWithDecimals(totalInvestment, 2),
@@ -892,6 +900,11 @@ function formatNumberWithDecimals(num, decimals) {
 // 更新显示
 function updateDisplay(values) {
     // 更新第一部分计算结果
+    const revparElement = document.getElementById('revparResult');
+    if (revparElement) {
+        revparElement.textContent = values.revparResult;
+    }
+    
     const pcfElement = document.getElementById('pcfResult');
     if (pcfElement) {
         pcfElement.textContent = values.pcfResult;
