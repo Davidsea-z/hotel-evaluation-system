@@ -421,6 +421,38 @@
                 <p class="section-description">填写6大核心字段，AI智能分析项目投资价值与风险</p>
             </div>
 
+            <!-- 智能解析区域 -->
+            <div class="smart-parse-container" style="margin-bottom: 2rem;">
+                <div class="parse-header" style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                    <svg style="width: 24px; height: 24px; color: #6366f1;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                    </svg>
+                    <h3 style="font-size: 1.125rem; font-weight: 700; color: #1f2937; margin: 0;">智能解析文本</h3>
+                </div>
+                <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 2px dashed #3b82f6; border-radius: 12px; padding: 1.5rem;">
+                    <textarea 
+                        id="smart-parse-input" 
+                        placeholder="粘贴您的项目描述文本，支持自动识别六大字段内容&#10;&#10;示例格式：&#10;地理位置：阿里巴巴西溪园区旁，未来科技城核心区...&#10;企业员工：周边阿里、网易等大厂，年轻员工5万+...&#10;高校学生：杭师大距离2公里，学生3万人...&#10;商旅客群：西湖会展中心1公里，商务出差频繁...&#10;直接竞品：3km内无电竞酒店...&#10;潜在竞品：2家传统网咖...&#10;替代娱乐：电影院、KTV各2家...&#10;1km以内电竞馆：5家&#10;1-2km电竞馆：8家&#10;2-3km电竞馆：3家&#10;电竞馆备注：市场需求旺盛...&#10;电竞酒店1：XX酒店,1.2公里,50间房&#10;电竞酒店2：YY酒店,2.5公里,30间房&#10;商务酒店1：如家酒店,0.8公里,80间房&#10;商务酒店2：汉庭酒店,1.5公里,100间房"
+                        style="width: 100%; min-height: 150px; padding: 1rem; border: 1px solid #3b82f6; border-radius: 8px; font-size: 0.95rem; line-height: 1.6; font-family: inherit; resize: vertical; background: white;"
+                    ></textarea>
+                    <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                        <button type="button" id="parse-text-btn" class="btn btn-primary" style="flex: 1;">
+                            <svg style="width: 20px; height: 20px; display: inline-block; margin-right: 0.5rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 11 12 14 22 4"/>
+                                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                            </svg>
+                            一键解析并填充表单
+                        </button>
+                        <button type="button" id="clear-parse-btn" class="btn" style="padding: 0.75rem 1.5rem; border: 2px solid #e5e7eb; background: white; color: #6b7280;">
+                            清空文本
+                        </button>
+                    </div>
+                    <div id="parse-result" style="margin-top: 1rem; padding: 0.75rem; background: #dcfce7; border-left: 4px solid #10b981; border-radius: 6px; display: none;">
+                        <span style="color: #065f46; font-weight: 600;">✓ 解析成功！已自动填充表单字段</span>
+                    </div>
+                </div>
+            </div>
+
             <!-- 评估表单容器 -->
             <div id="assessment-form-container" class="assessment-form-container">
                 <form id="investmentAssessmentForm" class="investment-assessment-form">

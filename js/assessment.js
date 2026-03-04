@@ -588,5 +588,261 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // 加载草稿数据
         loadAssessmentDraft();
+        
+        // 智能解析功能
+        setupSmartParse();
     }
 });
+
+// ==========================================
+// 智能文本解析功能
+// ==========================================
+
+function setupSmartParse() {
+    const parseBtn = document.getElementById('parse-text-btn');
+    const clearBtn = document.getElementById('clear-parse-btn');
+    const parseInput = document.getElementById('smart-parse-input');
+    const parseResult = document.getElementById('parse-result');
+    
+    if (!parseBtn || !parseInput) return;
+    
+    // 解析按钮点击
+    parseBtn.addEventListener('click', () => {
+        const text = parseInput.value.trim();
+        if (!text) {
+            alert('请先粘贴文本内容');
+            return;
+        }
+        
+        try {
+            const parsedData = parseInvestmentText(text);
+            fillFormWithParsedData(parsedData);
+            
+            // 显示成功提示
+            parseResult.style.display = 'block';
+            setTimeout(() => {
+                parseResult.style.display = 'none';
+            }, 3000);
+            
+            // 平滑滚动到表单
+            document.getElementById('assessment-form-container').scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+            });
+        } catch (error) {
+            console.error('解析失败:', error);
+            alert('解析失败，请检查文本格式');
+        }
+    });
+    
+    // 清空按钮
+    if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+            parseInput.value = '';
+            parseResult.style.display = 'none';
+        });
+    }
+}
+
+/**
+ * 智能解析投资评估文本
+ * @param {string} text - 用户粘贴的文本
+ * @returns {Object} 解析后的数据对象
+ */
+function parseInvestmentText(text) {
+    const data = {
+        geographic_location: '',
+        core_customer_flow: {
+            '企业年轻员工': '',
+            '高校学生': '',
+            '商旅与参会客群': ''
+        },
+        competitive_pattern: {
+            '直接竞品': '',
+            '潜在竞品': '',
+            '替代娱乐': ''
+        },
+        esports_venue_distribution: {
+            '1km以内': 0,
+            '1-2km': 0,
+            '2-3km': 0,
+            '备注': ''
+        },
+        esports_hotel_distribution: [],
+        business_hotel_distribution: []
+    };
+    
+    // 按行分割文本
+    const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+    
+    for (let line of lines) {
+        // 地理位置
+        if (/^地理位置[：:]/i.test(line)) {
+            data.geographic_location = line.replace(/^地理位置[：:]\s*/i, '');
+        }
+        
+        // 核心客流 - 企业员工
+        if (/^企业[员工年轻]*[：:]/i.test(line) || /企业.*员工/i.test(line)) {
+            data.core_customer_flow['企业年轻员工'] = line.replace(/^[^：:]+[：:]\s*/i, '');
+        }
+        
+        // 核心客流 - 高校学生
+        if (/^[高校大学]*学生[：:]/i.test(line) || /高校.*学生/i.test(line)) {
+            data.core_customer_flow['高校学生'] = line.replace(/^[^：:]+[：:]\s*/i, '');
+        }
+        
+        // 核心客流 - 商旅客群
+        if (/^商旅|商务.*[客群旅客][：:]/i.test(line)) {
+            data.core_customer_flow['商旅与参会客群'] = line.replace(/^[^：:]+[：:]\s*/i, '');
+        }
+        
+        // 竞争格局 - 直接竞品
+        if (/^直接竞品[：:]/i.test(line)) {
+            data.competitive_pattern['直接竞品'] = line.replace(/^直接竞品[：:]\s*/i, '');
+        }
+        
+        // 竞争格局 - 潜在竞品
+        if (/^潜在竞品[：:]/i.test(line)) {
+            data.competitive_pattern['潜在竞品'] = line.replace(/^潜在竞品[：:]\s*/i, '');
+        }
+        
+        // 竞争格局 - 替代娱乐
+        if (/^替代娱乐[：:]/i.test(line)) {
+            data.competitive_pattern['替代娱乐'] = line.replace(/^替代娱乐[：:]\s*/i, '');
+        }
+        
+        // 电竞馆分布 - 1km以内
+        if (/1\s*km\s*以内|1\s*公里以内/i.test(line)) {
+            const match = line.match(/(\d+)\s*家/);
+            if (match) data.esports_venue_distribution['1km以内'] = parseInt(match[1]);
+        }
+        
+        // 电竞馆分布 - 1-2km
+        if (/1\s*-\s*2\s*km|1\s*到\s*2\s*公里/i.test(line)) {
+            const match = line.match(/(\d+)\s*家/);
+            if (match) data.esports_venue_distribution['1-2km'] = parseInt(match[1]);
+        }
+        
+        // 电竞馆分布 - 2-3km
+        if (/2\s*-\s*3\s*km|2\s*到\s*3\s*公里/i.test(line)) {
+            const match = line.match(/(\d+)\s*家/);
+            if (match) data.esports_venue_distribution['2-3km'] = parseInt(match[1]);
+        }
+        
+        // 电竞馆备注
+        if (/电竞馆备注[：:]/i.test(line)) {
+            data.esports_venue_distribution['备注'] = line.replace(/^电竞馆备注[：:]\s*/i, '');
+        }
+        
+        // 电竞酒店分布
+        if (/电竞酒店\d+[：:]/i.test(line)) {
+            // 格式: 电竞酒店1：XX酒店,1.2公里,50间房
+            const parts = line.replace(/^电竞酒店\d+[：:]\s*/i, '').split(/[,，]/);
+            if (parts.length >= 3) {
+                const hotel = {
+                    name: parts[0].trim(),
+                    distance: parseFloat(parts[1].replace(/[公里km]/gi, '').trim()),
+                    rooms: parseInt(parts[2].replace(/[间房]/gi, '').trim())
+                };
+                data.esports_hotel_distribution.push(hotel);
+            }
+        }
+        
+        // 商务酒店分布
+        if (/商务酒店\d+[：:]/i.test(line)) {
+            // 格式: 商务酒店1：如家酒店,0.8公里,80间房
+            const parts = line.replace(/^商务酒店\d+[：:]\s*/i, '').split(/[,，]/);
+            if (parts.length >= 3) {
+                const hotel = {
+                    name: parts[0].trim(),
+                    distance: parseFloat(parts[1].replace(/[公里km]/gi, '').trim()),
+                    rooms: parseInt(parts[2].replace(/[间房]/gi, '').trim())
+                };
+                data.business_hotel_distribution.push(hotel);
+            }
+        }
+    }
+    
+    return data;
+}
+
+/**
+ * 用解析的数据填充表单
+ */
+function fillFormWithParsedData(data) {
+    // 填充地理位置
+    if (data.geographic_location) {
+        document.getElementById('geographic_location').value = data.geographic_location;
+    }
+    
+    // 填充核心客流
+    if (data.core_customer_flow['企业年轻员工']) {
+        document.getElementById('customer_enterprise').value = data.core_customer_flow['企业年轻员工'];
+    }
+    if (data.core_customer_flow['高校学生']) {
+        document.getElementById('customer_students').value = data.core_customer_flow['高校学生'];
+    }
+    if (data.core_customer_flow['商旅与参会客群']) {
+        document.getElementById('customer_business').value = data.core_customer_flow['商旅与参会客群'];
+    }
+    
+    // 填充竞争格局
+    if (data.competitive_pattern['直接竞品']) {
+        document.getElementById('competitive_direct').value = data.competitive_pattern['直接竞品'];
+    }
+    if (data.competitive_pattern['潜在竞品']) {
+        document.getElementById('competitive_potential').value = data.competitive_pattern['潜在竞品'];
+    }
+    if (data.competitive_pattern['替代娱乐']) {
+        document.getElementById('competitive_substitute').value = data.competitive_pattern['替代娱乐'];
+    }
+    
+    // 填充电竞馆分布
+    if (data.esports_venue_distribution['1km以内']) {
+        document.getElementById('venue_1km').value = data.esports_venue_distribution['1km以内'];
+    }
+    if (data.esports_venue_distribution['1-2km']) {
+        document.getElementById('venue_2km').value = data.esports_venue_distribution['1-2km'];
+    }
+    if (data.esports_venue_distribution['2-3km']) {
+        document.getElementById('venue_3km').value = data.esports_venue_distribution['2-3km'];
+    }
+    if (data.esports_venue_distribution['备注']) {
+        document.getElementById('venue_remarks').value = data.esports_venue_distribution['备注'];
+    }
+    
+    // 清空并重建电竞酒店列表
+    const esportsHotelList = document.getElementById('esports-hotel-list');
+    if (esportsHotelList) {
+        esportsHotelList.innerHTML = '';
+        esportsHotelsCount = 0;
+        
+        data.esports_hotel_distribution.forEach(hotel => {
+            addEsportsHotel();
+            const lastIndex = esportsHotelsCount - 1;
+            document.getElementById(`esports_hotel_name_${lastIndex}`).value = hotel.name;
+            document.getElementById(`esports_hotel_distance_${lastIndex}`).value = hotel.distance;
+            document.getElementById(`esports_hotel_rooms_${lastIndex}`).value = hotel.rooms;
+        });
+    }
+    
+    // 清空并重建商务酒店列表
+    const businessHotelList = document.getElementById('business-hotel-list');
+    if (businessHotelList) {
+        businessHotelList.innerHTML = '';
+        businessHotelsCount = 0;
+        
+        data.business_hotel_distribution.forEach(hotel => {
+            addBusinessHotel();
+            const lastIndex = businessHotelsCount - 1;
+            document.getElementById(`business_hotel_name_${lastIndex}`).value = hotel.name;
+            document.getElementById(`business_hotel_distance_${lastIndex}`).value = hotel.distance;
+            document.getElementById(`business_hotel_rooms_${lastIndex}`).value = hotel.rooms;
+        });
+    }
+    
+    // 保存草稿
+    saveAssessmentDraft();
+    
+    console.log('表单填充完成', data);
+}
