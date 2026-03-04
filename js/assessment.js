@@ -971,12 +971,12 @@ function fillFormWithParsedData(data) {
         }
     }
     if (data.core_customer_flow['高校学生']) {
-        const elem = document.getElementById('customer_students');
+        const elem = document.getElementById('customer_student');
         if (elem) {
             elem.value = data.core_customer_flow['高校学生'];
             console.log('✓ 高校学生已填充');
         } else {
-            console.warn('✗ 找不到 customer_students 元素');
+            console.warn('✗ 找不到 customer_student 元素');
         }
     }
     if (data.core_customer_flow['商旅与参会客群']) {

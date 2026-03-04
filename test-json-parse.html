@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>JSON解析测试</title>
+    <style>
+        body { font-family: Arial; padding: 20px; max-width: 1200px; margin: 0 auto; }
+        textarea { width: 100%; height: 300px; font-family: monospace; padding: 10px; }
+        button { padding: 10px 20px; margin: 10px 5px; cursor: pointer; }
+        .result { background: #f0f0f0; padding: 15px; margin: 10px 0; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>JSON解析测试工具</h1>
+    
+    <h3>粘贴JSON数据：</h3>
+    <textarea id="jsonInput">{
+  "geographic_location": "位于未来科技城核心区",
+  "core_customer_flow": {
+    "企业年轻员工": "阿里员工",
+    "高校学生": "杭师大学生",
+    "商旅与参会客群": "展会客流"
+  },
+  "competitive_pattern": {
+    "直接竞品": "已有电竞酒店",
+    "潜在竞品": "传统酒店",
+    "替代娱乐": "网吧"
+  },
+  "esports_venue_distribution": {
+    "1km以内": 6,
+    "1-2km": 9,
+    "2-3km": 8,
+    "备注": "网吧较多"
+  },
+  "esports_hotel_distribution": [
+    {"name": "梦之舟", "distance": 0.6, "rooms": 19}
+  ],
+  "business_hotel_distribution": [
+    {"name": "美豪酒店", "distance": 0.2, "rooms": 90}
+  ]
+}</textarea>
+    
+    <button onclick="testParse()">测试解析</button>
+    <button onclick="testAPI()">测试API调用</button>
+    <button onclick="clearResult()">清空结果</button>
+    
+    <div id="result" class="result" style="display:none;"></div>
+    
+    <script>
+        function testParse() {
+            const input = document.getElementById('jsonInput').value;
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                const data = JSON.parse(input);
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = '<h3>✓ JSON解析成功！</h3><pre>' + 
+                    JSON.stringify(data, null, 2) + '</pre>';
+                resultDiv.style.display = 'block';
+                
+                console.log('解析结果:', data);
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = '<h3>✗ JSON解析失败</h3><p>' + 
+                    error.message + '</p>';
+                resultDiv.style.display = 'block';
+            }
+        }
+        
+        function testAPI() {
+            const input = document.getElementById('jsonInput').value;
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                const data = JSON.parse(input);
+                
+                resultDiv.className = 'result';
+                resultDiv.innerHTML = '<h3>⏳ 正在调用API...</h3>';
+                resultDiv.style.display = 'block';
+                
+                fetch('http://localhost:5000/api/calculate_score', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(result => {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = '<h3>✓ API调用成功！</h3>' +
+                        '<p><strong>综合得分:</strong> ' + result.data.comprehensive_score + '</p>' +
+                        '<p><strong>价值等级:</strong> ' + result.data.value_level + '</p>' +
+                        '<p><strong>投资建议:</strong> ' + result.data.recommendation + '</p>' +
+                        '<pre>' + JSON.stringify(result, null, 2) + '</pre>';
+                })
+                .catch(error => {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = '<h3>✗ API调用失败</h3><p>' + 
+                        error.message + '</p>';
+                });
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = '<h3>✗ JSON解析失败</h3><p>' + 
+                    error.message + '</p>';
+                resultDiv.style.display = 'block';
+            }
+        }
+        
+        function clearResult() {
+            document.getElementById('result').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
