@@ -615,23 +615,33 @@ function setupSmartParse() {
         }
         
         try {
+            console.log('开始解析文本，长度:', text.length);
             const parsedData = parseInvestmentText(text);
+            console.log('解析结果:', parsedData);
+            
             fillFormWithParsedData(parsedData);
+            console.log('表单填充完成');
             
             // 显示成功提示
-            parseResult.style.display = 'block';
-            setTimeout(() => {
-                parseResult.style.display = 'none';
-            }, 3000);
+            if (parseResult) {
+                parseResult.style.display = 'block';
+                setTimeout(() => {
+                    parseResult.style.display = 'none';
+                }, 3000);
+            }
             
             // 平滑滚动到表单
-            document.getElementById('assessment-form-container').scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'start' 
-            });
+            const formContainer = document.getElementById('assessment-form-container');
+            if (formContainer) {
+                formContainer.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start' 
+                });
+            }
         } catch (error) {
-            console.error('解析失败:', error);
-            alert('解析失败，请检查文本格式');
+            console.error('解析失败详情:', error);
+            console.error('错误堆栈:', error.stack);
+            alert('解析失败：' + error.message + '\n请检查文本格式或查看控制台获取详细信息');
         }
     });
     
@@ -770,75 +780,157 @@ function parseInvestmentText(text) {
  * 用解析的数据填充表单
  */
 function fillFormWithParsedData(data) {
+    console.log('开始填充表单，数据:', data);
+    
     // 填充地理位置
     if (data.geographic_location) {
-        document.getElementById('geographic_location').value = data.geographic_location;
+        const elem = document.getElementById('geographic_location');
+        if (elem) {
+            elem.value = data.geographic_location;
+            console.log('✓ 地理位置已填充');
+        } else {
+            console.warn('✗ 找不到 geographic_location 元素');
+        }
     }
     
     // 填充核心客流
     if (data.core_customer_flow['企业年轻员工']) {
-        document.getElementById('customer_enterprise').value = data.core_customer_flow['企业年轻员工'];
+        const elem = document.getElementById('customer_enterprise');
+        if (elem) {
+            elem.value = data.core_customer_flow['企业年轻员工'];
+            console.log('✓ 企业员工已填充');
+        } else {
+            console.warn('✗ 找不到 customer_enterprise 元素');
+        }
     }
     if (data.core_customer_flow['高校学生']) {
-        document.getElementById('customer_students').value = data.core_customer_flow['高校学生'];
+        const elem = document.getElementById('customer_students');
+        if (elem) {
+            elem.value = data.core_customer_flow['高校学生'];
+            console.log('✓ 高校学生已填充');
+        } else {
+            console.warn('✗ 找不到 customer_students 元素');
+        }
     }
     if (data.core_customer_flow['商旅与参会客群']) {
-        document.getElementById('customer_business').value = data.core_customer_flow['商旅与参会客群'];
+        const elem = document.getElementById('customer_business');
+        if (elem) {
+            elem.value = data.core_customer_flow['商旅与参会客群'];
+            console.log('✓ 商旅客群已填充');
+        } else {
+            console.warn('✗ 找不到 customer_business 元素');
+        }
     }
     
     // 填充竞争格局
     if (data.competitive_pattern['直接竞品']) {
-        document.getElementById('competitive_direct').value = data.competitive_pattern['直接竞品'];
+        const elem = document.getElementById('competitive_direct');
+        if (elem) {
+            elem.value = data.competitive_pattern['直接竞品'];
+            console.log('✓ 直接竞品已填充');
+        } else {
+            console.warn('✗ 找不到 competitive_direct 元素');
+        }
     }
     if (data.competitive_pattern['潜在竞品']) {
-        document.getElementById('competitive_potential').value = data.competitive_pattern['潜在竞品'];
+        const elem = document.getElementById('competitive_potential');
+        if (elem) {
+            elem.value = data.competitive_pattern['潜在竞品'];
+            console.log('✓ 潜在竞品已填充');
+        } else {
+            console.warn('✗ 找不到 competitive_potential 元素');
+        }
     }
     if (data.competitive_pattern['替代娱乐']) {
-        document.getElementById('competitive_substitute').value = data.competitive_pattern['替代娱乐'];
+        const elem = document.getElementById('competitive_substitute');
+        if (elem) {
+            elem.value = data.competitive_pattern['替代娱乐'];
+            console.log('✓ 替代娱乐已填充');
+        } else {
+            console.warn('✗ 找不到 competitive_substitute 元素');
+        }
     }
     
     // 填充电竞馆分布
-    if (data.esports_venue_distribution['1km以内']) {
-        document.getElementById('venue_1km').value = data.esports_venue_distribution['1km以内'];
+    if (data.esports_venue_distribution['1km以内'] !== undefined) {
+        const elem = document.getElementById('venue_1km');
+        if (elem) {
+            elem.value = data.esports_venue_distribution['1km以内'];
+            console.log('✓ 1km以内电竞馆已填充:', data.esports_venue_distribution['1km以内']);
+        }
     }
-    if (data.esports_venue_distribution['1-2km']) {
-        document.getElementById('venue_2km').value = data.esports_venue_distribution['1-2km'];
+    if (data.esports_venue_distribution['1-2km'] !== undefined) {
+        const elem = document.getElementById('venue_2km');
+        if (elem) {
+            elem.value = data.esports_venue_distribution['1-2km'];
+            console.log('✓ 1-2km电竞馆已填充:', data.esports_venue_distribution['1-2km']);
+        }
     }
-    if (data.esports_venue_distribution['2-3km']) {
-        document.getElementById('venue_3km').value = data.esports_venue_distribution['2-3km'];
+    if (data.esports_venue_distribution['2-3km'] !== undefined) {
+        const elem = document.getElementById('venue_3km');
+        if (elem) {
+            elem.value = data.esports_venue_distribution['2-3km'];
+            console.log('✓ 2-3km电竞馆已填充:', data.esports_venue_distribution['2-3km']);
+        }
     }
     if (data.esports_venue_distribution['备注']) {
-        document.getElementById('venue_remarks').value = data.esports_venue_distribution['备注'];
+        const elem = document.getElementById('venue_remarks');
+        if (elem) {
+            elem.value = data.esports_venue_distribution['备注'];
+            console.log('✓ 电竞馆备注已填充');
+        }
     }
     
     // 清空并重建电竞酒店列表
     const esportsHotelList = document.getElementById('esports-hotel-list');
-    if (esportsHotelList) {
-        esportsHotelList.innerHTML = '';
-        esportsHotelsCount = 0;
-        
-        data.esports_hotel_distribution.forEach(hotel => {
-            addEsportsHotel();
-            const lastIndex = esportsHotelsCount - 1;
-            document.getElementById(`esports_hotel_name_${lastIndex}`).value = hotel.name;
-            document.getElementById(`esports_hotel_distance_${lastIndex}`).value = hotel.distance;
-            document.getElementById(`esports_hotel_rooms_${lastIndex}`).value = hotel.rooms;
-        });
+    if (esportsHotelList && data.esports_hotel_distribution.length > 0) {
+        try {
+            esportsHotelList.innerHTML = '';
+            esportsHotelsCount = 0;
+            
+            console.log(`准备添加 ${data.esports_hotel_distribution.length} 个电竞酒店`);
+            data.esports_hotel_distribution.forEach((hotel, index) => {
+                addEsportsHotel();
+                const lastIndex = esportsHotelsCount - 1;
+                const nameElem = document.getElementById(`esports_hotel_name_${lastIndex}`);
+                const distElem = document.getElementById(`esports_hotel_distance_${lastIndex}`);
+                const roomsElem = document.getElementById(`esports_hotel_rooms_${lastIndex}`);
+                
+                if (nameElem) nameElem.value = hotel.name || '';
+                if (distElem) distElem.value = hotel.distance || '';
+                if (roomsElem) roomsElem.value = hotel.rooms || '';
+                
+                console.log(`✓ 电竞酒店${index + 1}已添加:`, hotel);
+            });
+        } catch (error) {
+            console.error('电竞酒店列表填充失败:', error);
+        }
     }
     
     // 清空并重建商务酒店列表
     const businessHotelList = document.getElementById('business-hotel-list');
-    if (businessHotelList) {
-        businessHotelList.innerHTML = '';
-        businessHotelsCount = 0;
-        
-        data.business_hotel_distribution.forEach(hotel => {
-            addBusinessHotel();
-            const lastIndex = businessHotelsCount - 1;
-            document.getElementById(`business_hotel_name_${lastIndex}`).value = hotel.name;
-            document.getElementById(`business_hotel_distance_${lastIndex}`).value = hotel.distance;
-            document.getElementById(`business_hotel_rooms_${lastIndex}`).value = hotel.rooms;
-        });
+    if (businessHotelList && data.business_hotel_distribution.length > 0) {
+        try {
+            businessHotelList.innerHTML = '';
+            businessHotelsCount = 0;
+            
+            console.log(`准备添加 ${data.business_hotel_distribution.length} 个商务酒店`);
+            data.business_hotel_distribution.forEach((hotel, index) => {
+                addBusinessHotel();
+                const lastIndex = businessHotelsCount - 1;
+                const nameElem = document.getElementById(`business_hotel_name_${lastIndex}`);
+                const distElem = document.getElementById(`business_hotel_distance_${lastIndex}`);
+                const roomsElem = document.getElementById(`business_hotel_rooms_${lastIndex}`);
+                
+                if (nameElem) nameElem.value = hotel.name || '';
+                if (distElem) distElem.value = hotel.distance || '';
+                if (roomsElem) roomsElem.value = hotel.rooms || '';
+                
+                console.log(`✓ 商务酒店${index + 1}已添加:`, hotel);
+            });
+        } catch (error) {
+            console.error('商务酒店列表填充失败:', error);
+        }
     }
     
     // 保存草稿

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>智能解析测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        textarea { width: 100%; height: 300px; padding: 10px; margin: 10px 0; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        .result { background: #f0f0f0; padding: 15px; margin: 10px 0; }
+        pre { background: #fff; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>智能文本解析测试</h1>
+    
+    <textarea id="input" placeholder="粘贴测试文本...">地理位置：位于未来科技城核心区，毗邻阿里巴巴西溪园区
+
+企业员工：周边阿里巴巴、网易等大厂，年轻员工5万+
+
+高校学生：杭师大距离2公里，学生3万人
+
+商旅客群：西湖会展中心1公里，商务出差频繁
+
+直接竞品：3km内无电竞酒店，市场空白
+
+潜在竞品：2家传统网咖
+
+替代娱乐：电影院2家，KTV 3家
+
+1km以内电竞馆：5家
+1-2km电竞馆：8家
+2-3km电竞馆：3家
+电竞馆备注：市场需求旺盛但不饱和
+
+电竞酒店1：XX电竞酒店,1.2公里,50间房
+电竞酒店2：YY主题酒店,2.8公里,30间房
+
+商务酒店1：如家酒店,0.8公里,80间房
+商务酒店2：汉庭酒店,1.5公里,100间房</textarea>
+    
+    <button onclick="testParse()">测试解析</button>
+    <button onclick="clearResult()">清空结果</button>
+    
+    <div id="result" class="result" style="display:none;">
+        <h3>解析结果：</h3>
+        <pre id="output"></pre>
+    </div>
+    
+    <script>
+        function parseInvestmentText(text) {
+            const data = {
+                geographic_location: '',
+                core_customer_flow: {
+                    '企业年轻员工': '',
+                    '高校学生': '',
+                    '商旅与参会客群': ''
+                },
+                competitive_pattern: {
+                    '直接竞品': '',
+                    '潜在竞品': '',
+                    '替代娱乐': ''
+                },
+                esports_venue_distribution: {
+                    '1km以内': 0,
+                    '1-2km': 0,
+                    '2-3km': 0,
+                    '备注': ''
+                },
+                esports_hotel_distribution: [],
+                business_hotel_distribution: []
+            };
+            
+            const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+            
+            for (let line of lines) {
+                // 地理位置
+                if (/^地理位置[：:]/i.test(line)) {
+                    data.geographic_location = line.replace(/^地理位置[：:]\s*/i, '');
+                }
+                
+                // 企业员工
+                if (/^企业[员工年轻]*[：:]/i.test(line) || /企业.*员工/i.test(line)) {
+                    data.core_customer_flow['企业年轻员工'] = line.replace(/^[^：:]+[：:]\s*/i, '');
+                }
+                
+                // 高校学生
+                if (/^[高校大学]*学生[：:]/i.test(line) || /高校.*学生/i.test(line)) {
+                    data.core_customer_flow['高校学生'] = line.replace(/^[^：:]+[：:]\s*/i, '');
+                }
+                
+                // 商旅客群
+                if (/^商旅|商务.*[客群旅客][：:]/i.test(line)) {
+                    data.core_customer_flow['商旅与参会客群'] = line.replace(/^[^：:]+[：:]\s*/i, '');
+                }
+                
+                // 直接竞品
+                if (/^直接竞品[：:]/i.test(line)) {
+                    data.competitive_pattern['直接竞品'] = line.replace(/^直接竞品[：:]\s*/i, '');
+                }
+                
+                // 潜在竞品
+                if (/^潜在竞品[：:]/i.test(line)) {
+                    data.competitive_pattern['潜在竞品'] = line.replace(/^潜在竞品[：:]\s*/i, '');
+                }
+                
+                // 替代娱乐
+                if (/^替代娱乐[：:]/i.test(line)) {
+                    data.competitive_pattern['替代娱乐'] = line.replace(/^替代娱乐[：:]\s*/i, '');
+                }
+                
+                // 电竞馆 - 1km以内
+                if (/1\s*km\s*以内|1\s*公里以内/i.test(line)) {
+                    const match = line.match(/(\d+)\s*家/);
+                    if (match) data.esports_venue_distribution['1km以内'] = parseInt(match[1]);
+                }
+                
+                // 电竞馆 - 1-2km
+                if (/1\s*-\s*2\s*km|1\s*到\s*2\s*公里/i.test(line)) {
+                    const match = line.match(/(\d+)\s*家/);
+                    if (match) data.esports_venue_distribution['1-2km'] = parseInt(match[1]);
+                }
+                
+                // 电竞馆 - 2-3km
+                if (/2\s*-\s*3\s*km|2\s*到\s*3\s*公里/i.test(line)) {
+                    const match = line.match(/(\d+)\s*家/);
+                    if (match) data.esports_venue_distribution['2-3km'] = parseInt(match[1]);
+                }
+                
+                // 电竞馆备注
+                if (/电竞馆备注[：:]/i.test(line)) {
+                    data.esports_venue_distribution['备注'] = line.replace(/^电竞馆备注[：:]\s*/i, '');
+                }
+                
+                // 电竞酒店
+                if (/电竞酒店\d+[：:]/i.test(line)) {
+                    const parts = line.replace(/^电竞酒店\d+[：:]\s*/i, '').split(/[,，]/);
+                    if (parts.length >= 3) {
+                        const hotel = {
+                            name: parts[0].trim(),
+                            distance: parseFloat(parts[1].replace(/[公里km]/gi, '').trim()),
+                            rooms: parseInt(parts[2].replace(/[间房]/gi, '').trim())
+                        };
+                        data.esports_hotel_distribution.push(hotel);
+                    }
+                }
+                
+                // 商务酒店
+                if (/商务酒店\d+[：:]/i.test(line)) {
+                    const parts = line.replace(/^商务酒店\d+[：:]\s*/i, '').split(/[,，]/);
+                    if (parts.length >= 3) {
+                        const hotel = {
+                            name: parts[0].trim(),
+                            distance: parseFloat(parts[1].replace(/[公里km]/gi, '').trim()),
+                            rooms: parseInt(parts[2].replace(/[间房]/gi, '').trim())
+                        };
+                        data.business_hotel_distribution.push(hotel);
+                    }
+                }
+            }
+            
+            return data;
+        }
+        
+        function testParse() {
+            const input = document.getElementById('input').value;
+            const resultDiv = document.getElementById('result');
+            const output = document.getElementById('output');
+            
+            try {
+                const parsed = parseInvestmentText(input);
+                output.textContent = JSON.stringify(parsed, null, 2);
+                resultDiv.style.display = 'block';
+            } catch (error) {
+                output.textContent = '解析失败: ' + error.message;
+                resultDiv.style.display = 'block';
+            }
+        }
+        
+        function clearResult() {
+            document.getElementById('result').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
