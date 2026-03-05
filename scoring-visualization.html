@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>竞争格局评分对比 - 可视化</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">🎯 竞争格局评分逻辑优化</h1>
+        <p class="text-gray-600 mb-8">可视化对比：旧逻辑 vs 新逻辑</p>
+
+        <!-- 核心问题解答 -->
+        <div class="bg-blue-50 border-l-4 border-blue-500 p-6 mb-8">
+            <h2 class="text-xl font-bold text-blue-800 mb-3">❓ 核心问题</h2>
+            <div class="space-y-3">
+                <div>
+                    <p class="font-semibold text-gray-800">Q1: 周边竞品越多，风险是否越高？</p>
+                    <p class="text-gray-700 ml-4">✅ <strong>是的！</strong> 评分系统明确设计为：竞品数量 ↑ → 得分 ↓ → 风险 ↑</p>
+                </div>
+                <div>
+                    <p class="font-semibold text-gray-800">Q2: 为什么之前得分8.0偏高？</p>
+                    <p class="text-gray-700 ml-4">❌ 旧逻辑依赖关键词，未分析实际数量 → ✅ 新逻辑基于真实数据，精确计算</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 评分对比表 -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">📊 评分对比（你的数据）</h2>
+            <table class="w-full">
+                <thead>
+                    <tr class="bg-gray-100">
+                        <th class="py-3 px-4 text-left">维度</th>
+                        <th class="py-3 px-4 text-center">旧逻辑</th>
+                        <th class="py-3 px-4 text-center">新逻辑</th>
+                        <th class="py-3 px-4 text-center">变化</th>
+                        <th class="py-3 px-4 text-left">说明</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="border-b">
+                        <td class="py-3 px-4 font-semibold">竞争格局</td>
+                        <td class="py-3 px-4 text-center text-orange-600 font-bold">8.0分</td>
+                        <td class="py-3 px-4 text-center text-green-600 font-bold">7.0分</td>
+                        <td class="py-3 px-4 text-center">-1.0</td>
+                        <td class="py-3 px-4 text-sm text-gray-600">更精确反映中等竞争</td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="py-3 px-4 font-semibold">综合得分</td>
+                        <td class="py-3 px-4 text-center">7.71分</td>
+                        <td class="py-3 px-4 text-center">7.59分</td>
+                        <td class="py-3 px-4 text-center">-0.12</td>
+                        <td class="py-3 px-4 text-sm text-gray-600">轻微下调</td>
+                    </tr>
+                    <tr>
+                        <td class="py-3 px-4 font-semibold">价值等级</td>
+                        <td class="py-3 px-4 text-center text-blue-600">较高投资价值</td>
+                        <td class="py-3 px-4 text-center text-blue-600">较高投资价值</td>
+                        <td class="py-3 px-4 text-center">不变</td>
+                        <td class="py-3 px-4 text-sm text-gray-600">等级保持稳定</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 竞品数量梯度测试 -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">📈 竞品数量与得分关系</h2>
+            <canvas id="competitionChart" width="400" height="200"></canvas>
+            
+            <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-green-50 p-4 rounded">
+                    <p class="text-sm text-gray-600">0家电竞酒店</p>
+                    <p class="text-2xl font-bold text-green-600">10.0分</p>
+                    <p class="text-xs text-gray-500">市场空白</p>
+                </div>
+                <div class="bg-blue-50 p-4 rounded">
+                    <p class="text-sm text-gray-600">2家电竞酒店</p>
+                    <p class="text-2xl font-bold text-blue-600">9.5分</p>
+                    <p class="text-xs text-gray-500">竞争很少</p>
+                </div>
+                <div class="bg-yellow-50 p-4 rounded">
+                    <p class="text-sm text-gray-600">5家电竞酒店</p>
+                    <p class="text-2xl font-bold text-yellow-600">7.0分</p>
+                    <p class="text-xs text-gray-500">中等竞争 ⬅️ 你的情况</p>
+                </div>
+                <div class="bg-red-50 p-4 rounded">
+                    <p class="text-sm text-gray-600">10家电竞酒店</p>
+                    <p class="text-2xl font-bold text-red-600">2.5分</p>
+                    <p class="text-xs text-gray-500">竞争激烈</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 评分规则详解 -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">🔍 新评分规则详解</h2>
+            
+            <div class="space-y-6">
+                <!-- 电竞酒店扣分规则 -->
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">1️⃣ 电竞酒店数量（权重最高）</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="bg-gray-100">
+                                    <th class="py-2 px-3 text-left">数量范围</th>
+                                    <th class="py-2 px-3 text-center">扣分</th>
+                                    <th class="py-2 px-3 text-left">竞争程度</th>
+                                    <th class="py-2 px-3 text-left">风险等级</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b bg-green-50">
+                                    <td class="py-2 px-3">0家</td>
+                                    <td class="py-2 px-3 text-center font-bold">-0分</td>
+                                    <td class="py-2 px-3">无竞争</td>
+                                    <td class="py-2 px-3">🟢 极低风险</td>
+                                </tr>
+                                <tr class="border-b bg-green-50">
+                                    <td class="py-2 px-3">1-2家</td>
+                                    <td class="py-2 px-3 text-center font-bold">-0.5分</td>
+                                    <td class="py-2 px-3">竞争很少</td>
+                                    <td class="py-2 px-3">🟢 低风险</td>
+                                </tr>
+                                <tr class="border-b">
+                                    <td class="py-2 px-3">3-4家</td>
+                                    <td class="py-2 px-3 text-center font-bold">-1.5分</td>
+                                    <td class="py-2 px-3">竞争适中</td>
+                                    <td class="py-2 px-3">🟡 中等风险</td>
+                                </tr>
+                                <tr class="border-b bg-yellow-50">
+                                    <td class="py-2 px-3 font-semibold">5-6家 ⬅️</td>
+                                    <td class="py-2 px-3 text-center font-bold text-orange-600">-2.5分</td>
+                                    <td class="py-2 px-3 font-semibold">竞争较激烈</td>
+                                    <td class="py-2 px-3">🟡 中高风险</td>
+                                </tr>
+                                <tr class="border-b bg-red-50">
+                                    <td class="py-2 px-3">7-8家</td>
+                                    <td class="py-2 px-3 text-center font-bold text-red-600">-3.5分</td>
+                                    <td class="py-2 px-3">竞争激烈</td>
+                                    <td class="py-2 px-3">🔴 高风险</td>
+                                </tr>
+                                <tr class="border-b bg-red-50">
+                                    <td class="py-2 px-3">9+家</td>
+                                    <td class="py-2 px-3 text-center font-bold text-red-600">-4.5分</td>
+                                    <td class="py-2 px-3">竞争非常激烈</td>
+                                    <td class="py-2 px-3">🔴 极高风险</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 次要影响因子 -->
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">2️⃣ 电竞馆密度</h3>
+                        <ul class="space-y-2 text-sm text-gray-700">
+                            <li>• 0-19家 → <span class="font-semibold">不扣分</span></li>
+                            <li class="bg-yellow-50 p-2 rounded">• 20-25家 → <span class="font-semibold text-orange-600">-0.5分</span> ⬅️ 你的23家</li>
+                            <li>• 25-30家 → <span class="font-semibold">-1.0分</span></li>
+                            <li>• 30+家 → <span class="font-semibold text-red-600">-1.5分</span></li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">3️⃣ 商务酒店（潜在竞品）</h3>
+                        <ul class="space-y-2 text-sm text-gray-700">
+                            <li>• 0-4家 → <span class="font-semibold">不扣分</span></li>
+                            <li class="bg-yellow-50 p-2 rounded">• 5-8家 → <span class="font-semibold text-orange-600">-0.5分</span> ⬅️ 你的5家</li>
+                            <li>• 8-10家 → <span class="font-semibold">-1.0分</span></li>
+                            <li>• 10+家 → <span class="font-semibold text-red-600">-1.5分</span></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 差异化加分 -->
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">4️⃣ 差异化加分（新增）</h3>
+                    <div class="bg-green-50 p-4 rounded">
+                        <p class="text-sm text-gray-700">文本描述包含以下关键词可获得 <span class="font-bold text-green-600">+0.5分</span>：</p>
+                        <ul class="mt-2 space-y-1 text-sm text-gray-700 ml-4">
+                            <li>✅ "市场空白"</li>
+                            <li>✅ "定位差异"</li>
+                            <li>✅ "差异化"</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 你的数据计算详解 -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">🧮 你的数据详细计算</h2>
+            
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- 输入数据 -->
+                <div>
+                    <h3 class="font-semibold text-gray-800 mb-3">📥 输入数据</h3>
+                    <ul class="space-y-2 text-sm text-gray-700">
+                        <li>• 电竞酒店：<span class="font-bold text-blue-600">5家</span>（梦之舟、企鹅、网鱼、高玩、夜游）</li>
+                        <li>• 商务酒店：<span class="font-bold text-blue-600">5家</span>（美豪、云酒店、维也纳、无隐良居、宜必思）</li>
+                        <li>• 电竞馆：<span class="font-bold text-blue-600">23家</span>（6+9+8）</li>
+                        <li>• 文本描述：包含<span class="font-bold text-green-600">"市场空白"</span>和<span class="font-bold text-green-600">"定位差异"</span></li>
+                    </ul>
+                </div>
+                
+                <!-- 计算过程 -->
+                <div>
+                    <h3 class="font-semibold text-gray-800 mb-3">🔢 计算过程</h3>
+                    <div class="bg-gray-50 p-4 rounded font-mono text-sm">
+                        <p class="text-gray-700">起始分：<span class="font-bold text-blue-600">10.0</span></p>
+                        <p class="text-gray-700">- 电竞酒店5家：<span class="font-bold text-red-600">-2.5</span></p>
+                        <p class="text-gray-700">- 电竞馆23家：<span class="font-bold text-red-600">-0.5</span></p>
+                        <p class="text-gray-700">- 商务酒店5家：<span class="font-bold text-red-600">-0.5</span></p>
+                        <p class="text-gray-700">+ 差异化描述：<span class="font-bold text-green-600">+0.5</span></p>
+                        <p class="mt-3 pt-3 border-t border-gray-300 font-bold">最终得分：<span class="text-green-600 text-lg">7.0分</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 梯度测试结果 -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">🧪 梯度测试：竞品数量影响</h2>
+            <canvas id="gradientChart" width="400" height="200"></canvas>
+            
+            <div class="mt-6">
+                <h3 class="font-semibold text-gray-800 mb-3">测试数据表</h3>
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th class="py-2 px-3 text-left">场景</th>
+                            <th class="py-2 px-3 text-center">电竞酒店</th>
+                            <th class="py-2 px-3 text-center">电竞馆</th>
+                            <th class="py-2 px-3 text-center">商务酒店</th>
+                            <th class="py-2 px-3 text-center">竞争得分</th>
+                            <th class="py-2 px-3 text-center">综合得分</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b bg-green-50">
+                            <td class="py-2 px-3">场景1：无竞争</td>
+                            <td class="py-2 px-3 text-center">0家</td>
+                            <td class="py-2 px-3 text-center">16家</td>
+                            <td class="py-2 px-3 text-center">1家</td>
+                            <td class="py-2 px-3 text-center font-bold text-green-600">10.0</td>
+                            <td class="py-2 px-3 text-center">5.86</td>
+                        </tr>
+                        <tr class="border-b bg-blue-50">
+                            <td class="py-2 px-3">场景2：少量竞争</td>
+                            <td class="py-2 px-3 text-center">2家</td>
+                            <td class="py-2 px-3 text-center">16家</td>
+                            <td class="py-2 px-3 text-center">1家</td>
+                            <td class="py-2 px-3 text-center font-bold text-blue-600">9.5</td>
+                            <td class="py-2 px-3 text-center">5.80</td>
+                        </tr>
+                        <tr class="border-b bg-yellow-50">
+                            <td class="py-2 px-3 font-semibold">场景3：中等竞争 ⬅️</td>
+                            <td class="py-2 px-3 text-center font-bold">5家</td>
+                            <td class="py-2 px-3 text-center">23家</td>
+                            <td class="py-2 px-3 text-center">5家</td>
+                            <td class="py-2 px-3 text-center font-bold text-yellow-600">7.0</td>
+                            <td class="py-2 px-3 text-center font-bold">7.59</td>
+                        </tr>
+                        <tr class="border-b bg-red-50">
+                            <td class="py-2 px-3">场景4：激烈竞争</td>
+                            <td class="py-2 px-3 text-center">10家</td>
+                            <td class="py-2 px-3 text-center">37家</td>
+                            <td class="py-2 px-3 text-center">11家</td>
+                            <td class="py-2 px-3 text-center font-bold text-red-600">2.5</td>
+                            <td class="py-2 px-3 text-center">3.96</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 关键发现 -->
+        <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">💡 关键发现</h2>
+            <div class="space-y-3">
+                <div class="flex items-start">
+                    <span class="text-2xl mr-3">✅</span>
+                    <div>
+                        <p class="font-semibold text-gray-800">竞品数量直接影响得分</p>
+                        <p class="text-sm text-gray-600">电竞酒店0→10家，竞争格局得分从10分降至2.5分（<strong>下降75%</strong>）</p>
+                    </div>
+                </div>
+                <div class="flex items-start">
+                    <span class="text-2xl mr-3">✅</span>
+                    <div>
+                        <p class="font-semibold text-gray-800">综合得分随之下降</p>
+                        <p class="text-sm text-gray-600">综合得分从5.86降至3.96（<strong>下降32%</strong>），价值等级从"较高"降至"偏低"</p>
+                    </div>
+                </div>
+                <div class="flex items-start">
+                    <span class="text-2xl mr-3">✅</span>
+                    <div>
+                        <p class="font-semibold text-gray-800">评分曲线符合预期</p>
+                        <p class="text-sm text-gray-600">竞品越多 → 得分越低 → 风险越高，梯度清晰，逻辑合理</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 使用建议 -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">🎯 使用建议</h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <h3 class="font-semibold text-gray-800 mb-2">🏆 如何获得高分（9.0+）？</h3>
+                    <ul class="space-y-2 text-sm text-gray-700 ml-4">
+                        <li>✅ 选择电竞酒店 ≤ 2家的区域</li>
+                        <li>✅ 电竞馆 < 20家（避免市场饱和）</li>
+                        <li>✅ 在描述中强调"市场空白"、"定位差异"</li>
+                        <li>✅ 说明与现有竞品的差异化优势</li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="font-semibold text-gray-800 mb-2">📝 描述模板（高分写法）</h3>
+                    <div class="bg-gray-50 p-4 rounded text-sm">
+                        <p class="text-gray-700 mb-2"><strong>直接竞品：</strong></p>
+                        <p class="text-gray-600 italic">
+                            "3km内仅有1-2家经济型电竞酒店，房间数20间左右，定位偏低端（&lt;150元/间），
+                            与本项目中高端定位（300-500元/间）存在明显差异化，市场空白明显，先发优势显著。"
+                        </p>
+                        <p class="text-gray-700 mt-3 mb-2"><strong>预期得分：</strong></p>
+                        <p class="font-bold text-green-600">9.0-9.5分</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部链接 -->
+        <div class="mt-8 text-center text-sm text-gray-600">
+            <p>📍 <a href="https://3000-ifooox6v4gt5cuuudgofz-2e77fc33.sandbox.novita.ai" class="text-blue-600 hover:underline">测试系统</a></p>
+            <p>📂 <a href="https://github.com/Davidsea-z/hotel-evaluation-system" class="text-blue-600 hover:underline">GitHub仓库</a></p>
+            <p class="mt-4 text-gray-500">更新时间：2026-03-05 | MICROCONNECT AI</p>
+        </div>
+    </div>
+
+    <script>
+        // 竞品数量与得分关系图
+        const ctx1 = document.getElementById('competitionChart').getContext('2d');
+        new Chart(ctx1, {
+            type: 'line',
+            data: {
+                labels: ['0家', '2家', '4家', '5家', '6家', '8家', '10家'],
+                datasets: [{
+                    label: '竞争格局得分',
+                    data: [10.0, 9.5, 8.5, 7.0, 7.0, 5.5, 2.5],
+                    borderColor: 'rgb(59, 130, 246)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '电竞酒店数量 vs 竞争格局得分'
+                    },
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 10,
+                        title: {
+                            display: true,
+                            text: '竞争格局得分'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: '3km内电竞酒店数量'
+                        }
+                    }
+                }
+            }
+        });
+
+        // 综合影响对比图
+        const ctx2 = document.getElementById('gradientChart').getContext('2d');
+        new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: ['无竞争\n(0家)', '少量竞争\n(2家)', '中等竞争\n(5家)', '激烈竞争\n(10家)'],
+                datasets: [{
+                    label: '竞争格局得分',
+                    data: [10.0, 9.5, 7.0, 2.5],
+                    backgroundColor: [
+                        'rgba(16, 185, 129, 0.8)',
+                        'rgba(59, 130, 246, 0.8)',
+                        'rgba(245, 158, 11, 0.8)',
+                        'rgba(239, 68, 68, 0.8)'
+                    ]
+                }, {
+                    label: '综合得分',
+                    data: [5.86, 5.80, 7.59, 3.96],
+                    backgroundColor: [
+                        'rgba(16, 185, 129, 0.4)',
+                        'rgba(59, 130, 246, 0.4)',
+                        'rgba(245, 158, 11, 0.4)',
+                        'rgba(239, 68, 68, 0.4)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '竞品数量对评分的影响（梯度测试）'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 10,
+                        title: {
+                            display: true,
+                            text: '得分'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
