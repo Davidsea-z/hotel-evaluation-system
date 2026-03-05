@@ -433,20 +433,20 @@
                 </div>
                 
                 <!-- JSON格式输入 -->
-                <div id="json-format-panel" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px dashed #f59e0b; border-radius: 12px; padding: 1.5rem;">
+                <div id="json-format-panel" style="background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%); border: 2px dashed #6366f1; border-radius: 12px; padding: 1.5rem;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                        <span style="color: #92400e; font-weight: 600;">📋 粘贴JSON数据，或点击"获取模板"按钮</span>
-                        <button type="button" id="copy-json-template-btn" class="btn" style="padding: 0.5rem 1rem; border: 2px solid #f59e0b; background: white; color: #f59e0b; font-size: 0.875rem;">
+                        <span style="color: #3730a3; font-weight: 600;">📋 粘贴JSON数据，或点击"获取模板"按钮</span>
+                        <button type="button" id="copy-json-template-btn" class="btn" style="padding: 0.5rem 1rem; border: 2px solid #6366f1; background: white; color: #6366f1; font-size: 0.875rem;">
                             📄 获取JSON模板
                         </button>
                     </div>
                     <textarea 
                         id="json-parse-input" 
                         placeholder='粘贴JSON格式数据或点击"获取JSON模板"按钮查看完整模板...'
-                        style="width: 100%; min-height: 200px; padding: 1rem; border: 1px solid #f59e0b; border-radius: 8px; font-size: 0.9rem; line-height: 1.6; font-family: 'Courier New', monospace; resize: vertical; background: white;"
+                        style="width: 100%; min-height: 200px; padding: 1rem; border: 1px solid #6366f1; border-radius: 8px; font-size: 0.9rem; line-height: 1.6; font-family: 'Courier New', monospace; resize: vertical; background: white;"
                     ></textarea>
                     <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                        <button type="button" id="parse-json-btn" class="btn btn-primary" style="flex: 1; background: #f59e0b; border-color: #f59e0b;">
+                        <button type="button" id="parse-json-btn" class="btn btn-primary" style="flex: 1; background: #6366f1; border-color: #6366f1;">
                             <svg style="width: 20px; height: 20px; display: inline-block; margin-right: 0.5rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polyline points="9 11 12 14 22 4"/>
                                 <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
@@ -744,94 +744,107 @@
                     返回表单
                 </button>
 
-                <!-- 综合得分卡片 -->
-                <div class="result-score-card">
-                    <div class="score-main">
-                        <div class="score-label">综合投资价值得分</div>
-                        <div class="score-value" id="comprehensiveScore">0.0</div>
-                        <div class="score-level" id="valueLevel">评估中...</div>
-                    </div>
-                    <div class="score-breakdown">
-                        <div class="score-item">
-                            <span class="score-item-label">优势维度</span>
-                            <span class="score-item-value" id="advantageScore">0.0</span>
+                <!-- ① 报告头部 -->
+                <div id="report-header" style="background:linear-gradient(135deg,#1e1b4b 0%,#312e81 50%,#4c1d95 100%);border-radius:16px;padding:2rem 2.5rem;color:white;margin-bottom:1.5rem;">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
+                        <div>
+                            <div style="font-size:0.8rem;opacity:0.7;margin-bottom:0.25rem;letter-spacing:2px;">MICROCONNECT AI · 电竞酒店投资评估报告</div>
+                            <div id="report-project-name" style="font-size:1.5rem;font-weight:800;margin-bottom:0.5rem;">—</div>
+                            <div id="report-meta" style="font-size:0.85rem;opacity:0.75;">评估时间：—</div>
                         </div>
-                        <div class="score-item">
-                            <span class="score-item-label">风险维度</span>
-                            <span class="score-item-value" id="riskScore">0.0</span>
+                        <div id="report-score-badge" style="text-align:center;background:rgba(255,255,255,0.15);border-radius:12px;padding:1rem 1.5rem;min-width:120px;">
+                            <div style="font-size:0.75rem;opacity:0.8;margin-bottom:0.25rem;">综合投资价值</div>
+                            <div id="comprehensiveScore" style="font-size:3rem;font-weight:900;line-height:1;">0.0</div>
+                            <div id="valueLevel" style="font-size:0.85rem;margin-top:0.25rem;font-weight:600;">评估中...</div>
                         </div>
                     </div>
-                </div>
-
-                <!-- 维度得分详情 -->
-                <div class="result-dimensions-grid">
-                    <div class="dimension-card">
-                        <h4>地理位置</h4>
-                        <div class="dimension-score" id="dimScore1">0.0</div>
-                    </div>
-                    <div class="dimension-card">
-                        <h4>核心客流</h4>
-                        <div class="dimension-score" id="dimScore2">0.0</div>
-                    </div>
-                    <div class="dimension-card">
-                        <h4>竞争格局</h4>
-                        <div class="dimension-score" id="dimScore3">0.0</div>
-                    </div>
-                    <div class="dimension-card">
-                        <h4>电竞馆分布</h4>
-                        <div class="dimension-score" id="dimScore4">0.0</div>
-                    </div>
-                    <div class="dimension-card">
-                        <h4>电竞酒店分布</h4>
-                        <div class="dimension-score" id="dimScore5">0.0</div>
-                    </div>
-                    <div class="dimension-card">
-                        <h4>商务酒店分布</h4>
-                        <div class="dimension-score" id="dimScore6">0.0</div>
+                    <div style="display:flex;gap:1rem;margin-top:1.5rem;flex-wrap:wrap;">
+                        <div style="background:rgba(255,255,255,0.1);border-radius:8px;padding:0.6rem 1.2rem;font-size:0.85rem;">
+                            <span style="opacity:0.7;">优势维度</span>
+                            <span id="advantageScore" style="font-weight:700;font-size:1.1rem;margin-left:0.5rem;">0.0</span>
+                        </div>
+                        <div style="background:rgba(255,255,255,0.1);border-radius:8px;padding:0.6rem 1.2rem;font-size:0.85rem;">
+                            <span style="opacity:0.7;">风险维度</span>
+                            <span id="riskScore" style="font-weight:700;font-size:1.1rem;margin-left:0.5rem;">0.0</span>
+                        </div>
+                        <div style="background:rgba(255,255,255,0.1);border-radius:8px;padding:0.6rem 1.2rem;font-size:0.85rem;">
+                            <span style="opacity:0.7;">投资建议</span>
+                            <span id="report-recommendation" style="font-weight:700;margin-left:0.5rem;">—</span>
+                        </div>
                     </div>
                 </div>
 
-                <!-- 雷达图 -->
-                <div class="result-chart-container">
-                    <h3 class="chart-title">维度得分雷达图</h3>
-                    <canvas id="radarChart"></canvas>
+                <!-- ② 六维评分详情 -->
+                <div style="background:white;border-radius:16px;padding:1.5rem 2rem;margin-bottom:1.5rem;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+                    <h3 style="font-size:1rem;font-weight:700;color:#1f2937;margin:0 0 1.25rem;display:flex;align-items:center;gap:0.5rem;">
+                        <span style="width:4px;height:18px;background:#6366f1;border-radius:2px;display:inline-block;"></span>六维评分详情
+                    </h3>
+                    <div id="dim-details-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                        <!-- JS动态渲染 -->
+                    </div>
                 </div>
 
-                <!-- 评估结论 -->
-                <div class="result-conclusion">
-                    <div class="conclusion-section">
-                        <h4>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="20 6 9 17 4 12"/>
-                            </svg>
+                <!-- ③ 雷达图 + 关键数据 -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
+                    <div style="background:white;border-radius:16px;padding:1.5rem;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+                        <h3 style="font-size:1rem;font-weight:700;color:#1f2937;margin:0 0 1rem;display:flex;align-items:center;gap:0.5rem;">
+                            <span style="width:4px;height:18px;background:#6366f1;border-radius:2px;display:inline-block;"></span>能力雷达图
+                        </h3>
+                        <canvas id="radarChart"></canvas>
+                    </div>
+                    <div style="background:white;border-radius:16px;padding:1.5rem;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+                        <h3 style="font-size:1rem;font-weight:700;color:#1f2937;margin:0 0 1rem;display:flex;align-items:center;gap:0.5rem;">
+                            <span style="width:4px;height:18px;background:#f59e0b;border-radius:2px;display:inline-block;"></span>关键输入数据
+                        </h3>
+                        <div id="report-key-data" style="display:flex;flex-direction:column;gap:0.6rem;font-size:0.875rem;">
+                            <!-- JS动态渲染 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ④ 竞品详情 -->
+                <div id="report-competition-section" style="background:white;border-radius:16px;padding:1.5rem 2rem;margin-bottom:1.5rem;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+                    <h3 style="font-size:1rem;font-weight:700;color:#1f2937;margin:0 0 1.25rem;display:flex;align-items:center;gap:0.5rem;">
+                        <span style="width:4px;height:18px;background:#ef4444;border-radius:2px;display:inline-block;"></span>竞品市场详情
+                    </h3>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+                        <div>
+                            <div style="font-size:0.8rem;font-weight:600;color:#6b7280;margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:1px;">电竞酒店分布</div>
+                            <div id="report-esports-hotels">—</div>
+                        </div>
+                        <div>
+                            <div style="font-size:0.8rem;font-weight:600;color:#6b7280;margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:1px;">同档商务酒店</div>
+                            <div id="report-business-hotels">—</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ⑤ 综合结论 -->
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1.5rem;">
+                    <div style="background:#f0fdf4;border-radius:16px;padding:1.25rem 1.5rem;border-left:4px solid #10b981;">
+                        <h4 style="font-size:0.875rem;font-weight:700;color:#065f46;margin:0 0 0.75rem;display:flex;align-items:center;gap:0.4rem;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px;"><polyline points="20 6 9 17 4 12"/></svg>
                             项目优势
                         </h4>
-                        <ul id="strengthsList"></ul>
+                        <ul id="strengthsList" style="margin:0;padding-left:1rem;font-size:0.8rem;color:#065f46;line-height:1.8;"></ul>
                     </div>
-                    <div class="conclusion-section">
-                        <h4>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                                <line x1="12" y1="9" x2="12" y2="13"/>
-                                <line x1="12" y1="17" x2="12.01" y2="17"/>
-                            </svg>
+                    <div style="background:#fef2f2;border-radius:16px;padding:1.25rem 1.5rem;border-left:4px solid #ef4444;">
+                        <h4 style="font-size:0.875rem;font-weight:700;color:#991b1b;margin:0 0 0.75rem;display:flex;align-items:center;gap:0.4rem;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                             风险提示
                         </h4>
-                        <ul id="risksList"></ul>
+                        <ul id="risksList" style="margin:0;padding-left:1rem;font-size:0.8rem;color:#991b1b;line-height:1.8;"></ul>
                     </div>
-                    <div class="conclusion-section">
-                        <h4>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12 20h9"/>
-                                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-                            </svg>
+                    <div style="background:#eff6ff;border-radius:16px;padding:1.25rem 1.5rem;border-left:4px solid #3b82f6;">
+                        <h4 style="font-size:0.875rem;font-weight:700;color:#1e40af;margin:0 0 0.75rem;display:flex;align-items:center;gap:0.4rem;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
                             优化建议
                         </h4>
-                        <ul id="suggestionsList"></ul>
+                        <ul id="suggestionsList" style="margin:0;padding-left:1rem;font-size:0.8rem;color:#1e40af;line-height:1.8;"></ul>
                     </div>
                 </div>
 
-                <!-- 操作按钮 -->
+                <!-- ⑥ 操作按钮 -->
                 <div class="result-actions">
                     <button class="btn-secondary" onclick="backToAssessmentForm()">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -842,11 +855,12 @@
                     </button>
                     <button class="btn-primary" onclick="exportAssessmentReport()">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                            <polyline points="7 10 12 15 17 10"/>
-                            <line x1="12" y1="15" x2="12" y2="3"/>
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="12" y1="18" x2="12" y2="12"/>
+                            <line x1="9" y1="15" x2="15" y2="15"/>
                         </svg>
-                        导出报告
+                        导出 PDF 报告
                     </button>
                 </div>
 
@@ -879,5 +893,7 @@
 
     <script src="js/main.js"></script>
     <script src="js/assessment.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </body>
 </html>
