@@ -393,8 +393,8 @@ async function handleAssessmentSubmit(event) {
         console.log('API响应:', result);
         
         if (result.code === 200 && result.data) {
-            // 显示评估结果
-            displayAssessmentResult(result.data);
+            // 显示评估结果（同时传入原始表单数据用于报告渲染）
+            displayAssessmentResult(result.data, formData);
             
             // 清除草稿
             clearAssessmentDraft();
@@ -418,50 +418,111 @@ async function handleAssessmentSubmit(event) {
 // 结果展示
 // ==========================================
 
-function displayAssessmentResult(data) {
-    // 隐藏表单，显示结果
+// 全局保存当前报告数据（供 PDF 导出使用）
+let _reportData = null;
+let _reportFormData = null;
+
+const DIM_CONFIG = [
+    { key: 'geographic_location', label: '地理位置',   weight: '优势×40%', color: '#6366f1', desc: '基于地标关键词、商圈密度、交通配套综合评估' },
+    { key: 'core_customer_flow',  label: '核心客流',   weight: '优势×60%', color: '#8b5cf6', desc: '企业员工40% + 高校学生35% + 商旅客群25%加权' },
+    { key: 'competitive_pattern', label: '竞争格局',   weight: '风险×30%', color: '#f59e0b', desc: '直接竞品电竞酒店数量与差异化程度综合判断' },
+    { key: 'esports_venue',       label: '电竞馆分布', weight: '风险×14%', color: '#ef4444', desc: '3km内电竞馆总数密度，越少竞争越小' },
+    { key: 'esports_hotel',       label: '电竞酒店',   weight: '风险×28%', color: '#ec4899', desc: '3km内电竞酒店数量与房间数加权竞争强度' },
+    { key: 'business_hotel',      label: '商务酒店',   weight: '风险×7%',  color: '#10b981', desc: '适量商务酒店支撑客流，过多增加竞争' },
+];
+
+function displayAssessmentResult(data, formData) {
+    _reportData = data;
+    _reportFormData = formData || {};
+
     document.getElementById('assessment-form-container').style.display = 'none';
     document.getElementById('assessment-result-container').style.display = 'block';
-    
-    // 滚动到结果区域
     document.getElementById('assessment-result-container').scrollIntoView({ behavior: 'smooth' });
-    
-    // 填充综合得分
+
+    // ── 报告头部 ──
+    const projectName = _reportFormData.project_name || '待评估项目';
+    document.getElementById('report-project-name').textContent = projectName;
+    document.getElementById('report-meta').textContent =
+        `评估时间：${new Date().toLocaleString('zh-CN')}　｜　平均房价 ADR：${_reportFormData.adr ? _reportFormData.adr + ' 元/晚' : '未填写'}`;
     document.getElementById('comprehensiveScore').textContent = data.comprehensive_score.toFixed(1);
     document.getElementById('valueLevel').textContent = data.value_level;
-    document.getElementById('advantageScore').textContent = data.advantage_score.toFixed(1);
-    document.getElementById('riskScore').textContent = data.risk_score.toFixed(1);
-    
-    // 根据得分设置颜色
-    const scoreCard = document.querySelector('.result-score-card');
-    scoreCard.style.borderColor = data.color;
-    document.getElementById('comprehensiveScore').style.color = data.color;
-    
-    // 填充维度得分
+    document.getElementById('advantageScore').textContent = data.advantage_score.toFixed(2);
+    document.getElementById('riskScore').textContent = data.risk_score.toFixed(2);
+    document.getElementById('report-recommendation').textContent = data.recommendation;
+    document.getElementById('report-header').style.background =
+        `linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, ${data.color}99 100%)`;
+
+    // ── 六维评分详情 ──
     const scores = data.dimension_scores;
-    document.getElementById('dimScore1').textContent = scores.geographic_location;
-    document.getElementById('dimScore2').textContent = scores.core_customer_flow;
-    document.getElementById('dimScore3').textContent = scores.competitive_pattern;
-    document.getElementById('dimScore4').textContent = scores.esports_venue;
-    document.getElementById('dimScore5').textContent = scores.esports_hotel;
-    document.getElementById('dimScore6').textContent = scores.business_hotel;
-    
-    // 绘制雷达图
+    const dimGrid = document.getElementById('dim-details-grid');
+    dimGrid.innerHTML = '';
+    DIM_CONFIG.forEach(cfg => {
+        const score = scores[cfg.key] ?? 0;
+        const pct = (score / 10 * 100).toFixed(0);
+        const scoreColor = score >= 8 ? '#10b981' : score >= 6 ? '#3b82f6' : score >= 4 ? '#f59e0b' : '#ef4444';
+        dimGrid.innerHTML += `
+        <div style="background:#f9fafb;border-radius:10px;padding:1rem 1.25rem;border-left:3px solid ${cfg.color};">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+                <span style="font-weight:700;font-size:0.875rem;color:#1f2937;">${cfg.label}</span>
+                <span style="font-size:1.25rem;font-weight:900;color:${scoreColor};">${score}</span>
+            </div>
+            <div style="background:#e5e7eb;border-radius:999px;height:6px;margin-bottom:0.5rem;overflow:hidden;">
+                <div style="width:${pct}%;height:100%;background:${scoreColor};border-radius:999px;transition:width 0.6s ease;"></div>
+            </div>
+            <div style="font-size:0.72rem;color:#6b7280;display:flex;justify-content:space-between;">
+                <span>${cfg.desc}</span>
+                <span style="color:${cfg.color};font-weight:600;white-space:nowrap;margin-left:0.5rem;">${cfg.weight}</span>
+            </div>
+        </div>`;
+    });
+
+    // ── 关键输入数据 ──
+    const fd = _reportFormData;
+    const esportsCount = (fd.esports_hotel_distribution || []).length;
+    const businessCount = (fd.business_hotel_distribution || []).length;
+    const venueTotal = ((fd.esports_venue_distribution?.['1km以内'] || 0) +
+                        (fd.esports_venue_distribution?.['1-2km'] || 0) +
+                        (fd.esports_venue_distribution?.['2-3km'] || 0));
+    const keyRows = [
+        ['平均房价 ADR', fd.adr ? fd.adr + ' 元/晚' : '—'],
+        ['3km内电竞馆', venueTotal + ' 家'],
+        ['直接竞品电竞酒店', esportsCount + ' 家'],
+        ['同档次商务酒店', businessCount + ' 家'],
+        ['地理位置关键词', fd.geographic_location ? fd.geographic_location.slice(0, 30) + '…' : '—'],
+    ];
+    document.getElementById('report-key-data').innerHTML = keyRows.map(([k, v]) => `
+        <div style="display:flex;justify-content:space-between;padding:0.4rem 0;border-bottom:1px solid #f3f4f6;">
+            <span style="color:#6b7280;">${k}</span>
+            <span style="font-weight:600;color:#1f2937;text-align:right;max-width:55%;">${v}</span>
+        </div>`).join('');
+
+    // ── 竞品详情 ──
+    const esHotels = fd.esports_hotel_distribution || [];
+    const bizHotels = fd.business_hotel_distribution || [];
+    document.getElementById('report-esports-hotels').innerHTML = esHotels.length
+        ? esHotels.map(h => `<div style="font-size:0.8rem;padding:0.4rem 0;border-bottom:1px solid #f3f4f6;display:flex;justify-content:space-between;">
+            <span style="color:#1f2937;font-weight:600;">${h.name}</span>
+            <span style="color:#6b7280;">${h.distance}km · ${h.rooms || '?'}间</span>
+          </div>`).join('')
+        : '<div style="font-size:0.8rem;color:#10b981;padding:0.4rem 0;">✓ 3km内暂无直接竞品</div>';
+    document.getElementById('report-business-hotels').innerHTML = bizHotels.length
+        ? bizHotels.map(h => `<div style="font-size:0.8rem;padding:0.4rem 0;border-bottom:1px solid #f3f4f6;display:flex;justify-content:space-between;">
+            <span style="color:#1f2937;font-weight:600;">${h.name}</span>
+            <span style="color:#6b7280;">${h.distance}km · ${h.rooms || '?'}间</span>
+          </div>`).join('')
+        : '<div style="font-size:0.8rem;color:#6b7280;padding:0.4rem 0;">暂无数据</div>';
+
+    // ── 雷达图 ──
     drawRadarChart(scores);
-    
-    // 填充评估结论
+
+    // ── 综合结论 ──
     displayConclusion(data.conclusion);
 }
 
 // 绘制雷达图
 function drawRadarChart(scores) {
     const ctx = document.getElementById('radarChart').getContext('2d');
-    
-    // 销毁旧图表（如果存在）
-    if (window.assessmentRadarChart) {
-        window.assessmentRadarChart.destroy();
-    }
-    
+    if (window.assessmentRadarChart) window.assessmentRadarChart.destroy();
     window.assessmentRadarChart = new Chart(ctx, {
         type: 'radar',
         data: {
@@ -469,76 +530,38 @@ function drawRadarChart(scores) {
             datasets: [{
                 label: '维度得分',
                 data: [
-                    scores.geographic_location,
-                    scores.core_customer_flow,
-                    scores.competitive_pattern,
-                    scores.esports_venue,
-                    scores.esports_hotel,
-                    scores.business_hotel
+                    scores.geographic_location, scores.core_customer_flow,
+                    scores.competitive_pattern, scores.esports_venue,
+                    scores.esports_hotel,        scores.business_hotel
                 ],
                 fill: true,
-                backgroundColor: 'rgba(99, 102, 241, 0.2)',
-                borderColor: 'rgb(99, 102, 241)',
-                pointBackgroundColor: 'rgb(99, 102, 241)',
+                backgroundColor: 'rgba(99,102,241,0.18)',
+                borderColor: 'rgb(99,102,241)',
+                pointBackgroundColor: 'rgb(99,102,241)',
                 pointBorderColor: '#fff',
                 pointHoverBackgroundColor: '#fff',
-                pointHoverBorderColor: 'rgb(99, 102, 241)'
+                pointHoverBorderColor: 'rgb(99,102,241)'
             }]
         },
         options: {
-            elements: {
-                line: {
-                    borderWidth: 3
-                }
-            },
-            scales: {
-                r: {
-                    angleLines: {
-                        display: true
-                    },
-                    suggestedMin: 0,
-                    suggestedMax: 10,
-                    ticks: {
-                        stepSize: 2
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    display: false
-                }
-            }
+            elements: { line: { borderWidth: 3 } },
+            scales: { r: { suggestedMin: 0, suggestedMax: 10, ticks: { stepSize: 2 } } },
+            plugins: { legend: { display: false } }
         }
     });
 }
 
 // 显示评估结论
 function displayConclusion(conclusion) {
-    // 优势列表
-    const strengthsList = document.getElementById('strengthsList');
-    strengthsList.innerHTML = '';
-    conclusion.strengths.forEach(item => {
-        const li = document.createElement('li');
-        li.textContent = item;
-        strengthsList.appendChild(li);
-    });
-    
-    // 风险列表
-    const risksList = document.getElementById('risksList');
-    risksList.innerHTML = '';
-    conclusion.risks.forEach(item => {
-        const li = document.createElement('li');
-        li.textContent = item;
-        risksList.appendChild(li);
-    });
-    
-    // 建议列表
-    const suggestionsList = document.getElementById('suggestionsList');
-    suggestionsList.innerHTML = '';
-    conclusion.suggestions.forEach(item => {
-        const li = document.createElement('li');
-        li.textContent = item;
-        suggestionsList.appendChild(li);
+    ['strengthsList','risksList','suggestionsList'].forEach((id, i) => {
+        const key = ['strengths','risks','suggestions'][i];
+        const el = document.getElementById(id);
+        el.innerHTML = '';
+        (conclusion[key] || []).forEach(item => {
+            const li = document.createElement('li');
+            li.textContent = item;
+            el.appendChild(li);
+        });
     });
 }
 
@@ -557,25 +580,252 @@ function backToAssessmentForm() {
 function resetAssessmentForm() {
     if (confirm('确定要重置表单吗？所有填写的内容将被清除。')) {
         document.getElementById('investmentAssessmentForm').reset();
-        
-        // 清除动态酒店表单
         document.getElementById('esports-hotels-container').innerHTML = '';
         document.getElementById('business-hotels-container').innerHTML = '';
         esportsHotelsCount = 0;
         businessHotelsCount = 0;
-        
-        // 清除草稿
         clearAssessmentDraft();
-        
-        // 滚动到表单顶部
         document.getElementById('investment-assessment').scrollIntoView({ behavior: 'smooth' });
     }
 }
 
-// 导出报告
-function exportAssessmentReport() {
-    alert('导出报告功能开发中...\n即将支持PDF格式导出');
-    // TODO: 实现PDF导出功能
+// ==========================================
+// PDF 导出（html2canvas 截图方案，完整支持中文）
+// ==========================================
+
+async function exportAssessmentReport() {
+    if (!_reportData) { alert('请先完成评估再导出报告'); return; }
+
+    const btn = document.querySelector('.result-actions .btn-primary');
+    const orig = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;margin-right:6px;vertical-align:middle;"></span>生成中…';
+
+    try {
+        const projName = (_reportFormData.project_name || '待评估项目');
+        const fileName = `投资评估报告_${projName.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g,'_').slice(0,20)}_${new Date().toLocaleDateString('zh-CN').replace(/\//g,'')}.pdf`;
+
+        // ── 构建独立的打印用 HTML 容器 ──
+        const printWrap = document.createElement('div');
+        printWrap.id = 'pdf-print-wrap';
+        Object.assign(printWrap.style, {
+            position: 'fixed', left: '-9999px', top: '0',
+            width: '794px', background: '#fff',
+            fontFamily: '"PingFang SC","Microsoft YaHei",sans-serif',
+            padding: '0', margin: '0', zIndex: '-1'
+        });
+
+        const data = _reportData;
+        const fd   = _reportFormData;
+        const scores = data.dimension_scores;
+        const scoreColor = s => s>=8?'#10b981':s>=6?'#3b82f6':s>=4?'#f59e0b':'#ef4444';
+        const pct = s => (s/10*100).toFixed(0);
+        const venueTotal = ((fd.esports_venue_distribution?.['1km以内']||0)+(fd.esports_venue_distribution?.['1-2km']||0)+(fd.esports_venue_distribution?.['2-3km']||0));
+        const esHotels  = fd.esports_hotel_distribution  || [];
+        const bizHotels = fd.business_hotel_distribution || [];
+
+        const dimRows = DIM_CONFIG.map(cfg => {
+            const s = scores[cfg.key] ?? 0;
+            return `<tr>
+              <td style="padding:8px 12px;font-weight:600;color:#1f2937;border-bottom:1px solid #f3f4f6;">
+                <span style="display:inline-block;width:4px;height:14px;background:${cfg.color};border-radius:2px;vertical-align:middle;margin-right:8px;"></span>${cfg.label}
+              </td>
+              <td style="padding:8px 12px;color:#6b7280;font-size:12px;border-bottom:1px solid #f3f4f6;">${cfg.desc}</td>
+              <td style="padding:8px 12px;color:#6b7280;font-size:12px;border-bottom:1px solid #f3f4f6;">${cfg.weight}</td>
+              <td style="padding:8px 12px;border-bottom:1px solid #f3f4f6;">
+                <div style="background:#e5e7eb;border-radius:999px;height:6px;width:100px;overflow:hidden;display:inline-block;vertical-align:middle;">
+                  <div style="width:${pct(s)}%;height:100%;background:${scoreColor(s)};border-radius:999px;"></div>
+                </div>
+              </td>
+              <td style="padding:8px 16px;font-size:1.1rem;font-weight:900;color:${scoreColor(s)};text-align:right;border-bottom:1px solid #f3f4f6;">${s}</td>
+            </tr>`;
+        }).join('');
+
+        const esportsRows = esHotels.length
+            ? esHotels.map(h=>`<tr>
+                <td style="padding:7px 10px;border-bottom:1px solid #f3f4f6;">${h.name||'—'}</td>
+                <td style="padding:7px 10px;border-bottom:1px solid #f3f4f6;color:#6b7280;">${h.distance||'?'} km</td>
+                <td style="padding:7px 10px;border-bottom:1px solid #f3f4f6;color:#6b7280;">${h.rooms||'?'} 间</td>
+                <td style="padding:7px 10px;border-bottom:1px solid #f3f4f6;color:#6b7280;">${h.price_range||'—'}</td>
+              </tr>`).join('')
+            : '<tr><td colspan="4" style="padding:10px;color:#10b981;">✓ 3km内暂无直接竞品</td></tr>';
+
+        const bizRows = bizHotels.length
+            ? bizHotels.map(h=>`<tr>
+                <td style="padding:7px 10px;border-bottom:1px solid #f3f4f6;">${h.name||'—'}</td>
+                <td style="padding:7px 10px;border-bottom:1px solid #f3f4f6;color:#6b7280;">${h.distance||'?'} km</td>
+                <td style="padding:7px 10px;border-bottom:1px solid #f3f4f6;color:#6b7280;">${h.rooms||'?'} 间</td>
+                <td style="padding:7px 10px;border-bottom:1px solid #f3f4f6;color:#6b7280;">${h.price_range||'—'}</td>
+              </tr>`).join('')
+            : '<tr><td colspan="4" style="padding:10px;color:#6b7280;">暂无数据</td></tr>';
+
+        const strLi  = (data.conclusion.strengths   ||[]).map(i=>`<li style="margin:4px 0;line-height:1.6;">${i}</li>`).join('');
+        const riskLi = (data.conclusion.risks        ||[]).map(i=>`<li style="margin:4px 0;line-height:1.6;">${i}</li>`).join('');
+        const sugLi  = (data.conclusion.suggestions  ||[]).map(i=>`<li style="margin:4px 0;line-height:1.6;">${i}</li>`).join('');
+
+        printWrap.innerHTML = `
+        <!-- ======= 封面 ======= -->
+        <div style="background:linear-gradient(135deg,#1e1b4b 0%,#312e81 55%,#4c1d95 100%);color:#fff;padding:60px 48px 50px;position:relative;overflow:hidden;min-height:280px;">
+          <div style="font-size:11px;opacity:0.65;letter-spacing:3px;margin-bottom:18px;">MICROCONNECT AI · 电竞酒店投资评估报告</div>
+          <div style="font-size:28px;font-weight:900;line-height:1.3;margin-bottom:12px;">${projName}</div>
+          <div style="font-size:13px;opacity:0.7;margin-bottom:32px;">评估时间：${new Date().toLocaleString('zh-CN')}</div>
+          <div style="display:flex;gap:24px;flex-wrap:wrap;">
+            <div style="background:rgba(255,255,255,0.15);border-radius:12px;padding:16px 24px;min-width:120px;text-align:center;">
+              <div style="font-size:11px;opacity:0.75;margin-bottom:4px;">综合投资价值</div>
+              <div style="font-size:42px;font-weight:900;line-height:1;">${data.comprehensive_score.toFixed(1)}</div>
+              <div style="font-size:13px;font-weight:600;margin-top:4px;">${data.value_level}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px;justify-content:center;">
+              <div style="background:rgba(255,255,255,0.1);border-radius:8px;padding:8px 18px;font-size:13px;">
+                <span style="opacity:0.7;">优势维度&nbsp;</span><strong>${data.advantage_score.toFixed(2)}</strong>
+              </div>
+              <div style="background:rgba(255,255,255,0.1);border-radius:8px;padding:8px 18px;font-size:13px;">
+                <span style="opacity:0.7;">风险维度&nbsp;</span><strong>${data.risk_score.toFixed(2)}</strong>
+              </div>
+              <div style="background:rgba(255,255,255,0.1);border-radius:8px;padding:8px 18px;font-size:13px;">
+                <span style="opacity:0.7;">投资建议&nbsp;</span><strong>${data.recommendation}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ======= 关键数据 ======= -->
+        <div style="padding:32px 48px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px;">
+            <span style="width:4px;height:20px;background:#f59e0b;border-radius:2px;display:inline-block;"></span>
+            <span style="font-size:16px;font-weight:700;color:#1f2937;">关键输入数据</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:32px;">
+            ${[
+              ['平均房价 ADR', fd.adr ? fd.adr+' 元/晚' : '—'],
+              ['3km内电竞馆总数', venueTotal+' 家'],
+              ['直接竞品电竞酒店', esHotels.length+' 家'],
+              ['同档次商务酒店', bizHotels.length+' 家'],
+              ['电竞馆分布（1km内/1-2km/2-3km）',
+                `${fd.esports_venue_distribution?.['1km以内']||0} / ${fd.esports_venue_distribution?.['1-2km']||0} / ${fd.esports_venue_distribution?.['2-3km']||0} 家`],
+              ['地理位置', fd.geographic_location ? fd.geographic_location.slice(0,40)+(fd.geographic_location.length>40?'…':'') : '—'],
+            ].map(([k,v])=>`
+              <div style="background:#f9fafb;border-radius:8px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;">
+                <span style="color:#6b7280;font-size:13px;">${k}</span>
+                <span style="font-weight:700;color:#1f2937;font-size:13px;">${v}</span>
+              </div>`).join('')}
+          </div>
+
+          <!-- ======= 六维评分 ======= -->
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px;">
+            <span style="width:4px;height:20px;background:#6366f1;border-radius:2px;display:inline-block;"></span>
+            <span style="font-size:16px;font-weight:700;color:#1f2937;">六维评分详情</span>
+          </div>
+          <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:32px;">
+            <thead>
+              <tr style="background:#f3f4f6;">
+                <th style="padding:8px 12px;text-align:left;font-weight:600;color:#374151;">维度</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:600;color:#374151;">说明</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:600;color:#374151;">权重</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:600;color:#374151;">得分进度</th>
+                <th style="padding:8px 16px;text-align:right;font-weight:600;color:#374151;">得分</th>
+              </tr>
+            </thead>
+            <tbody>${dimRows}</tbody>
+          </table>
+
+          <!-- ======= 竞品市场 ======= -->
+          ${(esHotels.length || bizHotels.length) ? `
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px;">
+            <span style="width:4px;height:20px;background:#ef4444;border-radius:2px;display:inline-block;"></span>
+            <span style="font-size:16px;font-weight:700;color:#1f2937;">竞品市场详情</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:32px;">
+            <div>
+              <div style="font-size:12px;font-weight:600;color:#ef4444;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">电竞酒店分布</div>
+              <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                <thead><tr style="background:#fef2f2;">
+                  <th style="padding:6px 10px;text-align:left;color:#991b1b;">名称</th>
+                  <th style="padding:6px 10px;text-align:left;color:#991b1b;">距离</th>
+                  <th style="padding:6px 10px;text-align:left;color:#991b1b;">房间</th>
+                  <th style="padding:6px 10px;text-align:left;color:#991b1b;">价格</th>
+                </tr></thead>
+                <tbody>${esportsRows}</tbody>
+              </table>
+            </div>
+            <div>
+              <div style="font-size:12px;font-weight:600;color:#3b82f6;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">同档商务酒店</div>
+              <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                <thead><tr style="background:#eff6ff;">
+                  <th style="padding:6px 10px;text-align:left;color:#1e40af;">名称</th>
+                  <th style="padding:6px 10px;text-align:left;color:#1e40af;">距离</th>
+                  <th style="padding:6px 10px;text-align:left;color:#1e40af;">房间</th>
+                  <th style="padding:6px 10px;text-align:left;color:#1e40af;">价格</th>
+                </tr></thead>
+                <tbody>${bizRows}</tbody>
+              </table>
+            </div>
+          </div>` : ''}
+
+          <!-- ======= 综合结论 ======= -->
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px;">
+            <span style="width:4px;height:20px;background:#10b981;border-radius:2px;display:inline-block;"></span>
+            <span style="font-size:16px;font-weight:700;color:#1f2937;">综合评估结论</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:40px;">
+            <div style="background:#f0fdf4;border-radius:12px;padding:16px 18px;border-left:4px solid #10b981;">
+              <div style="font-size:13px;font-weight:700;color:#065f46;margin-bottom:10px;">✅ 项目优势</div>
+              <ul style="margin:0;padding-left:16px;font-size:12px;color:#065f46;line-height:1.8;">${strLi}</ul>
+            </div>
+            <div style="background:#fef2f2;border-radius:12px;padding:16px 18px;border-left:4px solid #ef4444;">
+              <div style="font-size:13px;font-weight:700;color:#991b1b;margin-bottom:10px;">⚠️ 风险提示</div>
+              <ul style="margin:0;padding-left:16px;font-size:12px;color:#991b1b;line-height:1.8;">${riskLi}</ul>
+            </div>
+            <div style="background:#eff6ff;border-radius:12px;padding:16px 18px;border-left:4px solid #3b82f6;">
+              <div style="font-size:13px;font-weight:700;color:#1e40af;margin-bottom:10px;">💡 优化建议</div>
+              <ul style="margin:0;padding-left:16px;font-size:12px;color:#1e40af;line-height:1.8;">${sugLi}</ul>
+            </div>
+          </div>
+
+          <!-- 页脚 -->
+          <div style="border-top:1px solid #e5e7eb;padding-top:16px;text-align:center;font-size:11px;color:#9ca3af;">
+            本报告由 MICROCONNECT AI 自动生成，仅供参考，不构成投资建议 · ${new Date().toLocaleDateString('zh-CN')}
+          </div>
+        </div>`;
+
+        document.body.appendChild(printWrap);
+        // 等待渲染完成
+        await new Promise(r => setTimeout(r, 300));
+
+        const canvas = await html2canvas(printWrap, {
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: '#ffffff',
+            logging: false
+        });
+
+        document.body.removeChild(printWrap);
+
+        const { jsPDF } = window.jspdf;
+        const imgW  = 210; // A4 宽度 mm
+        const imgH  = canvas.height / canvas.width * imgW;
+        const pageH = 297; // A4 高度 mm
+
+        const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+
+        // 分页：将长图按 A4 高度切割
+        let yOffset = 0;
+        while (yOffset < imgH) {
+            if (yOffset > 0) pdf.addPage();
+            pdf.addImage(imgData, 'JPEG', 0, -yOffset, imgW, imgH, '', 'FAST');
+            yOffset += pageH;
+        }
+
+        pdf.save(fileName);
+    } catch(e) {
+        console.error('PDF导出失败:', e);
+        alert('PDF导出失败：' + e.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = orig;
+    }
 }
 
 // ==========================================
