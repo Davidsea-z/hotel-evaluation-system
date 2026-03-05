@@ -733,124 +733,76 @@ function getJSONTemplate() {
  */
 function fillFormWithParsedData(data) {
     console.log('开始填充表单，数据:', data);
-    
-    // 填充地理位置
-    if (data.geographic_location) {
-        const elem = document.getElementById('geographic_location');
-        if (elem) {
-            elem.value = data.geographic_location;
-            console.log('✓ 地理位置已填充');
-        } else {
-            console.warn('✗ 找不到 geographic_location 元素');
-        }
-    }
-    
-    // 填充核心客流
-    if (data.core_customer_flow['企业年轻员工']) {
-        const elem = document.getElementById('customer_enterprise');
-        if (elem) {
-            elem.value = data.core_customer_flow['企业年轻员工'];
-            console.log('✓ 企业员工已填充');
-        } else {
-            console.warn('✗ 找不到 customer_enterprise 元素');
-        }
-    }
-    if (data.core_customer_flow['高校学生']) {
-        const elem = document.getElementById('customer_student');
-        if (elem) {
-            elem.value = data.core_customer_flow['高校学生'];
-            console.log('✓ 高校学生已填充');
-        } else {
-            console.warn('✗ 找不到 customer_student 元素');
-        }
-    }
-    if (data.core_customer_flow['商旅与参会客群']) {
-        const elem = document.getElementById('customer_business');
-        if (elem) {
-            elem.value = data.core_customer_flow['商旅与参会客群'];
-            console.log('✓ 商旅客群已填充');
-        } else {
-            console.warn('✗ 找不到 customer_business 元素');
-        }
-    }
-    
-    // 填充竞争格局
-    if (data.competitive_pattern['直接竞品']) {
-        const elem = document.getElementById('competitive_direct');
-        if (elem) {
-            elem.value = data.competitive_pattern['直接竞品'];
-            console.log('✓ 直接竞品已填充');
-        } else {
-            console.warn('✗ 找不到 competitive_direct 元素');
-        }
-    }
-    if (data.competitive_pattern['潜在竞品']) {
-        const elem = document.getElementById('competitive_potential');
-        if (elem) {
-            elem.value = data.competitive_pattern['潜在竞品'];
-            console.log('✓ 潜在竞品已填充');
-        } else {
-            console.warn('✗ 找不到 competitive_potential 元素');
-        }
-    }
-    if (data.competitive_pattern['替代娱乐']) {
-        const elem = document.getElementById('competitive_substitute');
-        if (elem) {
-            elem.value = data.competitive_pattern['替代娱乐'];
-            console.log('✓ 替代娱乐已填充');
-        } else {
-            console.warn('✗ 找不到 competitive_substitute 元素');
-        }
-    }
-    
-    // 填充电竞馆分布
-    if (data.esports_venue_distribution['1km以内'] !== undefined) {
-        const elem = document.getElementById('venue_1km');
-        if (elem) {
-            elem.value = data.esports_venue_distribution['1km以内'];
-            console.log('✓ 1km以内电竞馆已填充:', data.esports_venue_distribution['1km以内']);
-        }
-    }
-    if (data.esports_venue_distribution['1-2km'] !== undefined) {
-        const elem = document.getElementById('venue_2km');
-        if (elem) {
-            elem.value = data.esports_venue_distribution['1-2km'];
-            console.log('✓ 1-2km电竞馆已填充:', data.esports_venue_distribution['1-2km']);
-        }
-    }
-    if (data.esports_venue_distribution['2-3km'] !== undefined) {
-        const elem = document.getElementById('venue_3km');
-        if (elem) {
-            elem.value = data.esports_venue_distribution['2-3km'];
-            console.log('✓ 2-3km电竞馆已填充:', data.esports_venue_distribution['2-3km']);
-        }
-    }
-    if (data.esports_venue_distribution['备注']) {
-        const elem = document.getElementById('venue_remarks');
-        if (elem) {
-            elem.value = data.esports_venue_distribution['备注'];
-            console.log('✓ 电竞馆备注已填充');
-        }
-    }
-    
+
+    // ── 优先填充 project_name 和 adr，放最前面避免后续异常导致跳过 ──
+
     // 填充 project_name → 项目名称
     if (data.project_name) {
-        const projElem = document.getElementById('project_name');
-        if (projElem) {
-            projElem.value = data.project_name;
-            console.log('✓ 项目名称已填充:', data.project_name);
-        }
+        const elem = document.getElementById('project_name');
+        if (elem) { elem.value = data.project_name; console.log('✓ 项目名称已填充:', data.project_name); }
     }
 
     // 填充 adr → avgPrice（平均房价ADR）
-    const adrValue = data.adr || data.avg_daily_rate || data.average_daily_rate;
-    if (adrValue) {
+    const adrValue = (data.adr != null) ? data.adr : (data.avg_daily_rate != null ? data.avg_daily_rate : data.average_daily_rate);
+    if (adrValue != null) {
         const adrElem = document.getElementById('avgPrice');
         if (adrElem) {
             adrElem.value = adrValue;
             if (typeof calculate === 'function') calculate();
             console.log('✓ ADR（平均房价）已填充:', adrValue);
         }
+    }
+
+    // 填充地理位置
+    if (data.geographic_location) {
+        const elem = document.getElementById('geographic_location');
+        if (elem) { elem.value = data.geographic_location; console.log('✓ 地理位置已填充'); }
+    }
+
+    // 填充核心客流（用可选链防止 core_customer_flow 不存在时崩溃）
+    if (data.core_customer_flow?.['企业年轻员工']) {
+        const elem = document.getElementById('customer_enterprise');
+        if (elem) { elem.value = data.core_customer_flow['企业年轻员工']; console.log('✓ 企业员工已填充'); }
+    }
+    if (data.core_customer_flow?.['高校学生']) {
+        const elem = document.getElementById('customer_student');
+        if (elem) { elem.value = data.core_customer_flow['高校学生']; console.log('✓ 高校学生已填充'); }
+    }
+    if (data.core_customer_flow?.['商旅与参会客群']) {
+        const elem = document.getElementById('customer_business');
+        if (elem) { elem.value = data.core_customer_flow['商旅与参会客群']; console.log('✓ 商旅客群已填充'); }
+    }
+
+    // 填充竞争格局（用可选链防止 competitive_pattern 不存在时崩溃）
+    if (data.competitive_pattern?.['直接竞品']) {
+        const elem = document.getElementById('competitive_direct');
+        if (elem) { elem.value = data.competitive_pattern['直接竞品']; console.log('✓ 直接竞品已填充'); }
+    }
+    if (data.competitive_pattern?.['潜在竞品']) {
+        const elem = document.getElementById('competitive_potential');
+        if (elem) { elem.value = data.competitive_pattern['潜在竞品']; console.log('✓ 潜在竞品已填充'); }
+    }
+    if (data.competitive_pattern?.['替代娱乐']) {
+        const elem = document.getElementById('competitive_substitute');
+        if (elem) { elem.value = data.competitive_pattern['替代娱乐']; console.log('✓ 替代娱乐已填充'); }
+    }
+
+    // 填充电竞馆分布（用可选链防止 esports_venue_distribution 不存在时崩溃）
+    if (data.esports_venue_distribution?.['1km以内'] != null) {
+        const elem = document.getElementById('venue_1km');
+        if (elem) { elem.value = data.esports_venue_distribution['1km以内']; }
+    }
+    if (data.esports_venue_distribution?.['1-2km'] != null) {
+        const elem = document.getElementById('venue_2km');
+        if (elem) { elem.value = data.esports_venue_distribution['1-2km']; }
+    }
+    if (data.esports_venue_distribution?.['2-3km'] != null) {
+        const elem = document.getElementById('venue_3km');
+        if (elem) { elem.value = data.esports_venue_distribution['2-3km']; }
+    }
+    if (data.esports_venue_distribution?.['备注']) {
+        const elem = document.getElementById('venue_remarks');
+        if (elem) { elem.value = data.esports_venue_distribution['备注']; }
     }
 
     // 清空并重建电竞酒店列表
