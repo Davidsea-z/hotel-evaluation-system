@@ -336,72 +336,154 @@ class InvestmentEvaluator:
         else:
             return 6.0  # 竞争激烈
     
+    def calculate_pcf_score(self) -> float:
+        """
+        计算PCF利润空间得分 (0-10分)
+        
+        基于滴灌通投资模型：
+        PCF(日) = 房间数 × RevPAR × 分成比例
+        RevPAR = ADR × OCC × (1 - OTA比例)
+        前端已传入 pcf_daily，直接映射为得分
+        """
+        pcf = float(self.data.get('pcf_daily', 0) or 0)
+        if pcf >= 3000:
+            return 10.0
+        elif pcf >= 2000:
+            return 8.5
+        elif pcf >= 1000:
+            return 7.0
+        elif pcf >= 500:
+            return 5.0
+        elif pcf >= 200:
+            return 3.0
+        else:
+            return 1.5
+
+    def calculate_frequency_score(self) -> float:
+        """
+        计算自动打款频率得分 (0-10分)
+        
+        分账越频繁 → 现金流回收越顺畅 → 得分越高
+        """
+        freq = self.data.get('irr_frequency', '')
+        mapping = {
+            'daily':     10.0,
+            'weekly':     7.0,
+            'biweekly':   5.0,
+        }
+        return mapping.get(freq, 3.0)
+
+    def calculate_differentiation_score(self) -> float:
+        """
+        计算差异化管控力得分 (0-10分)
+        
+        从 competitive_pattern 的文本中提取差异化程度
+        """
+        pattern = self.data.get('competitive_pattern', {})
+        text = ' '.join([
+            pattern.get('直接竞品', ''),
+            pattern.get('潜在竞品', ''),
+            pattern.get('替代娱乐', '')
+        ])
+        score = 5.0
+        positive = ['空白', '差异化', '独家', '唯一', '首家', '无竞品', '无直接']
+        negative = ['激烈', '饱和', '多家', '竞争强', '红海']
+        for kw in positive:
+            if kw in text:
+                score += 1.0
+        for kw in negative:
+            if kw in text:
+                score -= 0.8
+        return max(0, min(10, score))
+
     def calculate_comprehensive_score(self) -> Dict[str, Any]:
         """
-        计算综合投资价值得分
+        计算综合投资价值得分（四象限模型）
+        
+        四象限：
+          回报 Return    = 地理位置(40%) + 核心客流(60%)          权重 30%
+          收益 Yield     = PCF利润空间(50%) + 分账频率(50%)        权重 25%
+          风险 Risk      = 电竞馆分布(40%) + 电竞酒店分布(60%)     权重 25%
+          管控 Control   = 商务参照成熟度(40%) + 差异化管控力(60%) 权重 20%
         
         Returns:
             包含各维度得分和综合评估结果的字典
         """
-        # 计算各维度得分
-        geo_score = self.calculate_geographic_score()
-        customer_score = self.calculate_customer_flow_score()
-        competitive_score = self.calculate_competitive_pattern_score()
-        venue_score = self.calculate_esports_venue_score()
-        hotel_score = self.calculate_esports_hotel_score()
-        business_score = self.calculate_business_hotel_score()
-        
-        # 保存维度得分
+        # 计算各子维度得分
+        geo_score         = self.calculate_geographic_score()
+        customer_score    = self.calculate_customer_flow_score()
+        pcf_score         = self.calculate_pcf_score()
+        frequency_score   = self.calculate_frequency_score()
+        venue_score       = self.calculate_esports_venue_score()
+        hotel_score       = self.calculate_esports_hotel_score()
+        business_score    = self.calculate_business_hotel_score()
+        diff_score        = self.calculate_differentiation_score()
+
+        # 四象限综合分
+        return_score  = geo_score * 0.4  + customer_score * 0.6
+        yield_score   = pcf_score  * 0.5  + frequency_score * 0.5
+        risk_score    = venue_score * 0.4 + hotel_score * 0.6
+        control_score = business_score * 0.4 + diff_score * 0.6
+
+        # 保存全部8个子维度得分
         self.scores = {
+            # 回报
             'geographic_location': round(geo_score, 1),
-            'core_customer_flow': round(customer_score, 1),
-            'competitive_pattern': round(competitive_score, 1),
-            'esports_venue': round(venue_score, 1),
-            'esports_hotel': round(hotel_score, 1),
-            'business_hotel': round(business_score, 1)
+            'core_customer_flow':  round(customer_score, 1),
+            # 收益
+            'pcf_yield':           round(pcf_score, 1),
+            'frequency':           round(frequency_score, 1),
+            # 风险
+            'esports_venue':       round(venue_score, 1),
+            'esports_hotel':       round(hotel_score, 1),
+            # 管控
+            'business_hotel':      round(business_score, 1),
+            'differentiation':     round(diff_score, 1),
         }
-        
-        # 优势维度得分 (60%权重)
-        # 地理位置40% + 核心客流60%
-        advantage_score = (geo_score * 0.4 + customer_score * 0.6) * 0.6
-        
-        # 风险维度得分 (40%权重)
-        # 竞争格局30% + 竞品分布70%（电竞馆20% + 电竞酒店40% + 商务酒店10%）
-        risk_score = (
-            competitive_score * 0.3 + 
-            (venue_score * 0.2 + hotel_score * 0.4 + business_score * 0.1) * 0.7
-        ) * 0.4
-        
-        # 综合得分
-        comprehensive_score = advantage_score + risk_score
+
+        # 四象限得分
+        quadrant_scores = {
+            'return_score':  round(return_score,  2),
+            'yield_score':   round(yield_score,   2),
+            'risk_score':    round(risk_score,    2),
+            'control_score': round(control_score, 2),
+        }
+
+        # 综合加权得分（满分10分）
+        comprehensive_score = (
+            return_score  * 0.30 +
+            yield_score   * 0.25 +
+            risk_score    * 0.25 +
+            control_score * 0.20
+        )
         
         # 价值等级判定
         if comprehensive_score >= 8.5:
             value_level = "高投资价值"
             recommendation = "强烈推荐投资"
-            color = "#10b981"  # 绿色
+            color = "#10b981"
         elif comprehensive_score >= 7.0:
             value_level = "较高投资价值"
             recommendation = "推荐投资"
-            color = "#3b82f6"  # 蓝色
+            color = "#3b82f6"
         elif comprehensive_score >= 5.5:
             value_level = "中等投资价值"
             recommendation = "谨慎投资，建议优化方案"
-            color = "#f59e0b"  # 黄色
+            color = "#f59e0b"
         else:
             value_level = "投资价值偏低"
             recommendation = "不建议投资，风险较高"
-            color = "#ef4444"  # 红色
-        
+            color = "#ef4444"
+
         # 生成评估结论
         conclusion = self._generate_conclusion(
-            geo_score, customer_score, competitive_score,
-            venue_score, hotel_score, business_score
+            geo_score, customer_score, pcf_score,
+            venue_score, hotel_score, business_score,
+            diff_score, frequency_score
         )
-        
+
         return {
-            'advantage_score': round(advantage_score, 2),
-            'risk_score': round(risk_score, 2),
+            'quadrant_scores': quadrant_scores,
             'comprehensive_score': round(comprehensive_score, 2),
             'value_level': value_level,
             'recommendation': recommendation,
@@ -410,57 +492,56 @@ class InvestmentEvaluator:
             'conclusion': conclusion
         }
     
-    def _generate_conclusion(self, geo: float, customer: float, competitive: float,
-                            venue: float, hotel: float, business: float) -> Dict[str, List[str]]:
-        """
-        生成评估结论
-        
-        Returns:
-            包含优势、风险、建议的字典
-        """
+    def _generate_conclusion(self, geo: float, customer: float, pcf: float,
+                            venue: float, hotel: float, business: float,
+                            diff: float, frequency: float) -> Dict[str, List[str]]:
+        """生成四象限评估结论"""
         strengths = []
         risks = []
         suggestions = []
-        
-        # 优势分析
-        if geo >= 8:
-            strengths.append(f"地理位置优越（{geo}分），处于核心商圈或产业集聚区")
-        if customer >= 8:
-            strengths.append(f"核心客群匹配度高（{customer}分），目标客户群体明确且活跃")
-        if hotel >= 8:
-            strengths.append(f"电竞酒店市场空白（{hotel}分），竞争压力小，先发优势明显")
-        if competitive >= 8:
-            strengths.append(f"竞争格局良好（{competitive}分），直接竞品较少")
-        
-        # 风险分析
-        if geo < 6:
-            risks.append(f"地理位置一般（{geo}分），可能影响客流量")
-        if customer < 6:
-            risks.append(f"核心客群覆盖不足（{customer}分），需加强市场调研")
-        if venue >= 8 and hotel >= 7:
-            risks.append("电竞馆密集且电竞酒店较多，市场竞争激烈")
-        if competitive < 6:
-            risks.append(f"竞争格局复杂（{competitive}分），存在较多直接或潜在竞品")
-        
-        # 优化建议
+
+        return_score  = geo * 0.4 + customer * 0.6
+        yield_score   = pcf * 0.5 + frequency * 0.5
+        risk_score    = venue * 0.4 + hotel * 0.6
+        control_score = business * 0.4 + diff * 0.6
+
+        # 优势
+        if return_score >= 8:
+            strengths.append(f"回报潜力强（{return_score:.1f}分），地段与客群匹配度高")
+        if yield_score >= 7:
+            strengths.append(f"收益质量优（{yield_score:.1f}分），PCF现金流充裕且分账顺畅")
+        if risk_score >= 8:
+            strengths.append(f"竞争风险低（{risk_score:.1f}分），市场空白明显，先发优势突出")
+        if control_score >= 7:
+            strengths.append(f"管控能力强（{control_score:.1f}分），差异化护城河清晰")
+
+        # 风险
+        if return_score < 6:
+            risks.append(f"回报维度偏弱（{return_score:.1f}分），地理位置或客群覆盖不足")
+        if yield_score < 5:
+            risks.append(f"收益维度偏低（{yield_score:.1f}分），PCF现金流或分账频率需优化")
+        if risk_score < 6:
+            risks.append(f"市场竞争较激烈（{risk_score:.1f}分），电竞馆或同类酒店密集")
+        if control_score < 5:
+            risks.append(f"管控能力薄弱（{control_score:.1f}分），差异化优势不明显")
+
+        # 建议
         if geo < 7:
-            suggestions.append("建议选择靠近高校、产业园或商圈的位置")
-        if customer < 7:
-            suggestions.append("建议深入调研目标客群需求，制定差异化运营策略")
-        if venue < 6:
-            suggestions.append("电竞馆较少，建议加强线下推广，培育电竞氛围")
+            suggestions.append("建议选择靠近高校、产业园或核心商圈的位置以提升地段回报")
+        if pcf < 5:
+            suggestions.append("建议提升房间数量或ADR，扩大PCF日现金流规模")
+        if frequency < 7:
+            suggestions.append("建议与投资方协商更高频的分账周期（如日分账），加速资金回收")
         if hotel < 6:
-            suggestions.append("电竞酒店竞争激烈，建议打造特色主题房型或服务")
-        if business < 7:
-            suggestions.append("建议与周边商务酒店建立合作关系，互导客流")
-        
-        # 默认建议
+            suggestions.append("电竞酒店竞争较激烈，建议打造差异化主题房型或服务体验")
+        if diff < 6:
+            suggestions.append("建议强化产品差异化，构建电竞IP、场景或会员体系壁垒")
         if not suggestions:
-            suggestions.append("项目整体条件良好，建议按计划推进")
-        
+            suggestions.append("项目整体条件优良，建议按计划推进并持续跟踪市场动态")
+
         return {
-            'strengths': strengths if strengths else ['项目具备一定发展潜力'],
-            'risks': risks if risks else ['整体风险可控'],
+            'strengths':   strengths   if strengths   else ['项目具备一定发展潜力'],
+            'risks':       risks       if risks       else ['整体风险可控'],
             'suggestions': suggestions
         }
 

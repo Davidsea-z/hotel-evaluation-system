@@ -238,6 +238,17 @@ function getAssessmentFormData() {
         project_name: document.getElementById('project_name').value.trim(),
         adr: parseFloat(document.getElementById('assessment_adr').value) || null,
         geographic_location: document.getElementById('geographic_location').value.trim(),
+        // 从滴灌通投资模型读取 PCF 和分账频率
+        pcf_daily: (function() {
+            const roomCount = parseFloat(document.getElementById('roomCount')?.value || 0);
+            const occ = parseFloat(document.getElementById('occupancyRate')?.value || 0) / 100;
+            const adr = parseFloat(document.getElementById('avgPrice')?.value || 0);
+            const ota = parseFloat(document.getElementById('otaRate')?.value || 9) / 100;
+            const share = parseFloat(document.getElementById('profitShareRate')?.value || 0) / 100;
+            const revpar = adr * occ * (1 - ota);
+            return Math.round(roomCount * revpar * share * 100) / 100;
+        })(),
+        irr_frequency: document.getElementById('irrFrequency')?.value || 'daily',
         core_customer_flow: {
             '企业年轻员工': document.getElementById('customer_enterprise').value.trim(),
             '高校学生': document.getElementById('customer_student').value.trim(),
@@ -422,13 +433,27 @@ async function handleAssessmentSubmit(event) {
 let _reportData = null;
 let _reportFormData = null;
 
+// 四象限配置（象限颜色 + 子维度）
+const QUADRANT_CONFIG = [
+    { id: 'return',  label: '回报 Return',      color: '#3b82f6', bg: 'rgba(59,130,246,0.12)'  },
+    { id: 'yield',   label: '收益够不够 Yield',  color: '#10b981', bg: 'rgba(16,185,129,0.12)'  },
+    { id: 'risk',    label: '风险 Risk',         color: '#ef4444', bg: 'rgba(239,68,68,0.12)'   },
+    { id: 'control', label: '管控够不够 Control', color: '#8b5cf6', bg: 'rgba(139,92,246,0.12)' },
+];
+
 const DIM_CONFIG = [
-    { key: 'geographic_location', label: '地理位置',   weight: '优势×40%', color: '#6366f1', desc: '基于地标关键词、商圈密度、交通配套综合评估' },
-    { key: 'core_customer_flow',  label: '核心客流',   weight: '优势×60%', color: '#8b5cf6', desc: '企业员工40% + 高校学生35% + 商旅客群25%加权' },
-    { key: 'competitive_pattern', label: '竞争格局',   weight: '风险×30%', color: '#f59e0b', desc: '直接竞品电竞酒店数量与差异化程度综合判断' },
-    { key: 'esports_venue',       label: '电竞馆分布', weight: '风险×14%', color: '#ef4444', desc: '3km内电竞馆总数密度，越少竞争越小' },
-    { key: 'esports_hotel',       label: '电竞酒店',   weight: '风险×28%', color: '#ec4899', desc: '3km内电竞酒店数量与房间数加权竞争强度' },
-    { key: 'business_hotel',      label: '商务酒店',   weight: '风险×7%',  color: '#10b981', desc: '适量商务酒店支撑客流，过多增加竞争' },
+    // 回报象限（蓝色）
+    { key: 'geographic_location', label: '回报强度',     quadrant: 'return',  weight: '回报×40%', color: '#3b82f6', desc: '地段关键词·商圈密度·交通配套' },
+    { key: 'core_customer_flow',  label: '回报质量',     quadrant: 'return',  weight: '回报×60%', color: '#60a5fa', desc: '企业员工40%+高校35%+商旅25%加权' },
+    // 收益象限（绿色）
+    { key: 'pcf_yield',           label: '利润空间',     quadrant: 'yield',   weight: '收益×50%', color: '#10b981', desc: 'PCF日现金流=房间×RevPAR×分成比例' },
+    { key: 'frequency',           label: '自动打款频率', quadrant: 'yield',   weight: '收益×50%', color: '#34d399', desc: '日分账10分·周分账7分·双周5分' },
+    // 风险象限（红色）
+    { key: 'esports_venue',       label: '波动可控性',   quadrant: 'risk',    weight: '风险×40%', color: '#ef4444', desc: '3km电竞馆越少→分流风险越低' },
+    { key: 'esports_hotel',       label: '生命周期可见性', quadrant: 'risk',  weight: '风险×60%', color: '#f87171', desc: '3km电竞酒店越少→市场空白越大' },
+    // 管控象限（紫色）
+    { key: 'business_hotel',      label: '市场参照成熟度', quadrant: 'control', weight: '管控×40%', color: '#8b5cf6', desc: '适量商务酒店代表市场成熟·价格锚点健康' },
+    { key: 'differentiation',     label: '差异化管控力', quadrant: 'control', weight: '管控×60%', color: '#a78bfa', desc: '含空白/差异化/独家等关键词得高分' },
 ];
 
 function displayAssessmentResult(data, formData) {
@@ -443,36 +468,55 @@ function displayAssessmentResult(data, formData) {
     const projectName = _reportFormData.project_name || '待评估项目';
     document.getElementById('report-project-name').textContent = projectName;
     document.getElementById('report-meta').textContent =
-        `评估时间：${new Date().toLocaleString('zh-CN')}　｜　平均房价 ADR：${_reportFormData.adr ? _reportFormData.adr + ' 元/晚' : '未填写'}`;
+        `评估时间：${new Date().toLocaleString('zh-CN')}　｜　ADR：${_reportFormData.adr ? _reportFormData.adr + ' 元/晚' : '未填写'}　｜　日PCF：${_reportFormData.pcf_daily ? _reportFormData.pcf_daily.toLocaleString() + ' 元' : '—'}`;
     document.getElementById('comprehensiveScore').textContent = data.comprehensive_score.toFixed(1);
     document.getElementById('valueLevel').textContent = data.value_level;
-    document.getElementById('advantageScore').textContent = data.advantage_score.toFixed(2);
-    document.getElementById('riskScore').textContent = data.risk_score.toFixed(2);
     document.getElementById('report-recommendation').textContent = data.recommendation;
     document.getElementById('report-header').style.background =
         `linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, ${data.color}99 100%)`;
 
-    // ── 六维评分详情 ──
+    // ── 四象限得分卡片 ──
+    const qs = data.quadrant_scores || {};
+    document.getElementById('returnScore').textContent  = (qs.return_score  ?? '—');
+    document.getElementById('yieldScore').textContent   = (qs.yield_score   ?? '—');
+    document.getElementById('riskScore').textContent    = (qs.risk_score    ?? '—');
+    document.getElementById('controlScore').textContent = (qs.control_score ?? '—');
+
+    // ── 八维评分详情（按象限分组渲染）──
     const scores = data.dimension_scores;
     const dimGrid = document.getElementById('dim-details-grid');
     dimGrid.innerHTML = '';
-    DIM_CONFIG.forEach(cfg => {
-        const score = scores[cfg.key] ?? 0;
-        const pct = (score / 10 * 100).toFixed(0);
-        const scoreColor = score >= 8 ? '#10b981' : score >= 6 ? '#3b82f6' : score >= 4 ? '#f59e0b' : '#ef4444';
+    // 修改为每象限一个分组卡片，内含2个子维度
+    QUADRANT_CONFIG.forEach(q => {
+        const dims = DIM_CONFIG.filter(d => d.quadrant === q.id);
+        const qScore = qs[q.id + '_score'];
+        let innerHTML = '';
+        dims.forEach(cfg => {
+            const score = scores[cfg.key] ?? 0;
+            const pct = (score / 10 * 100).toFixed(0);
+            const scoreColor = score >= 8 ? '#10b981' : score >= 6 ? '#3b82f6' : score >= 4 ? '#f59e0b' : '#ef4444';
+            innerHTML += `
+            <div style="margin-bottom:0.75rem;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.3rem;">
+                    <span style="font-size:0.8rem;font-weight:600;color:#374151;">${cfg.label}</span>
+                    <span style="font-size:1rem;font-weight:900;color:${scoreColor};">${score}</span>
+                </div>
+                <div style="background:#e5e7eb;border-radius:999px;height:5px;overflow:hidden;">
+                    <div style="width:${pct}%;height:100%;background:${cfg.color};border-radius:999px;transition:width 0.6s ease;"></div>
+                </div>
+                <div style="font-size:0.68rem;color:#9ca3af;margin-top:0.2rem;display:flex;justify-content:space-between;">
+                    <span>${cfg.desc}</span>
+                    <span style="color:${cfg.color};font-weight:600;margin-left:4px;">${cfg.weight}</span>
+                </div>
+            </div>`;
+        });
         dimGrid.innerHTML += `
-        <div style="background:#f9fafb;border-radius:10px;padding:1rem 1.25rem;border-left:3px solid ${cfg.color};">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
-                <span style="font-weight:700;font-size:0.875rem;color:#1f2937;">${cfg.label}</span>
-                <span style="font-size:1.25rem;font-weight:900;color:${scoreColor};">${score}</span>
+        <div style="background:#f9fafb;border-radius:12px;padding:1rem 1.25rem;border-left:4px solid ${q.color};">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.875rem;">
+                <span style="font-weight:700;font-size:0.9rem;color:${q.color};">${q.label}</span>
+                <span style="font-size:1.4rem;font-weight:900;color:${q.color};">${qScore != null ? qScore.toFixed(1) : '—'}</span>
             </div>
-            <div style="background:#e5e7eb;border-radius:999px;height:6px;margin-bottom:0.5rem;overflow:hidden;">
-                <div style="width:${pct}%;height:100%;background:${scoreColor};border-radius:999px;transition:width 0.6s ease;"></div>
-            </div>
-            <div style="font-size:0.72rem;color:#6b7280;display:flex;justify-content:space-between;">
-                <span>${cfg.desc}</span>
-                <span style="color:${cfg.color};font-weight:600;white-space:nowrap;margin-left:0.5rem;">${cfg.weight}</span>
-            </div>
+            ${innerHTML}
         </div>`;
     });
 
@@ -483,12 +527,14 @@ function displayAssessmentResult(data, formData) {
     const venueTotal = ((fd.esports_venue_distribution?.['1km以内'] || 0) +
                         (fd.esports_venue_distribution?.['1-2km'] || 0) +
                         (fd.esports_venue_distribution?.['2-3km'] || 0));
+    const freqLabel = { daily: '日分账', weekly: '周分账', biweekly: '双周分账' }[fd.irr_frequency] || '—';
     const keyRows = [
-        ['平均房价 ADR', fd.adr ? fd.adr + ' 元/晚' : '—'],
-        ['3km内电竞馆', venueTotal + ' 家'],
+        ['平均房价 ADR',    fd.adr ? fd.adr + ' 元/晚' : '—'],
+        ['PCF 日现金流',    fd.pcf_daily ? fd.pcf_daily.toLocaleString() + ' 元/天' : '—'],
+        ['分账频率',        freqLabel],
+        ['3km内电竞馆',     venueTotal + ' 家'],
         ['直接竞品电竞酒店', esportsCount + ' 家'],
-        ['同档次商务酒店', businessCount + ' 家'],
-        ['地理位置关键词', fd.geographic_location ? fd.geographic_location.slice(0, 30) + '…' : '—'],
+        ['同档次商务酒店',   businessCount + ' 家'],
     ];
     document.getElementById('report-key-data').innerHTML = keyRows.map(([k, v]) => `
         <div style="display:flex;justify-content:space-between;padding:0.4rem 0;border-bottom:1px solid #f3f4f6;">
@@ -519,34 +565,82 @@ function displayAssessmentResult(data, formData) {
     displayConclusion(data.conclusion);
 }
 
-// 绘制雷达图
+// 绘制四象限8轴雷达图
 function drawRadarChart(scores) {
     const ctx = document.getElementById('radarChart').getContext('2d');
     if (window.assessmentRadarChart) window.assessmentRadarChart.destroy();
+
+    // 8个轴按象限顺序排列：回报→收益→风险→管控，每象限2轴
+    const labels = [
+        '回报强度', '回报质量',         // 回报 蓝
+        '利润空间', '自动打款频率',       // 收益 绿
+        '波动可控性', '生命周期可见性',   // 风险 红
+        '市场参照成熟度', '差异化管控力', // 管控 紫
+    ];
+    const dataPoints = [
+        scores.geographic_location ?? 0,
+        scores.core_customer_flow  ?? 0,
+        scores.pcf_yield           ?? 0,
+        scores.frequency           ?? 0,
+        scores.esports_venue       ?? 0,
+        scores.esports_hotel       ?? 0,
+        scores.business_hotel      ?? 0,
+        scores.differentiation     ?? 0,
+    ];
+
+    // 象限颜色映射（每2个轴一色）
+    const quadrantColors = [
+        '#3b82f6', '#3b82f6', // 回报
+        '#10b981', '#10b981', // 收益
+        '#ef4444', '#ef4444', // 风险
+        '#8b5cf6', '#8b5cf6', // 管控
+    ];
+
     window.assessmentRadarChart = new Chart(ctx, {
         type: 'radar',
         data: {
-            labels: ['地理位置', '核心客流', '竞争格局', '电竞馆分布', '电竞酒店', '商务酒店'],
+            labels,
             datasets: [{
                 label: '维度得分',
-                data: [
-                    scores.geographic_location, scores.core_customer_flow,
-                    scores.competitive_pattern, scores.esports_venue,
-                    scores.esports_hotel,        scores.business_hotel
-                ],
+                data: dataPoints,
                 fill: true,
-                backgroundColor: 'rgba(99,102,241,0.18)',
-                borderColor: 'rgb(99,102,241)',
-                pointBackgroundColor: 'rgb(99,102,241)',
+                backgroundColor: 'rgba(99,102,241,0.15)',
+                borderColor: 'rgba(99,102,241,0.8)',
+                borderWidth: 2.5,
+                pointBackgroundColor: quadrantColors,
                 pointBorderColor: '#fff',
-                pointHoverBackgroundColor: '#fff',
-                pointHoverBorderColor: 'rgb(99,102,241)'
+                pointBorderWidth: 2,
+                pointRadius: 5,
+                pointHoverRadius: 7,
             }]
         },
         options: {
-            elements: { line: { borderWidth: 3 } },
-            scales: { r: { suggestedMin: 0, suggestedMax: 10, ticks: { stepSize: 2 } } },
-            plugins: { legend: { display: false } }
+            responsive: true,
+            elements: { line: { borderWidth: 2.5 } },
+            scales: {
+                r: {
+                    suggestedMin: 0,
+                    suggestedMax: 10,
+                    ticks: { stepSize: 2, font: { size: 10 }, color: '#9ca3af' },
+                    grid: { color: 'rgba(0,0,0,0.06)' },
+                    angleLines: { color: 'rgba(0,0,0,0.08)' },
+                    pointLabels: {
+                        font: { size: 11, weight: '600' },
+                        color: (ctx) => quadrantColors[ctx.index] || '#374151',
+                    }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (item) => {
+                            const qLabels = ['回报','回报','收益','收益','风险','风险','管控','管控'];
+                            return ` ${qLabels[item.dataIndex]}·${item.label}：${item.raw} 分`;
+                        }
+                    }
+                }
+            }
         }
     });
 }
@@ -676,11 +770,17 @@ async function exportAssessmentReport() {
               <div style="font-size:13px;font-weight:600;margin-top:4px;">${data.value_level}</div>
             </div>
             <div style="display:flex;flex-direction:column;gap:10px;justify-content:center;">
-              <div style="background:rgba(255,255,255,0.1);border-radius:8px;padding:8px 18px;font-size:13px;">
-                <span style="opacity:0.7;">优势维度&nbsp;</span><strong>${data.advantage_score.toFixed(2)}</strong>
+              <div style="background:rgba(59,130,246,0.25);border-radius:8px;padding:8px 18px;font-size:13px;">
+                <span style="opacity:0.85;">📈 回报&nbsp;</span><strong>${(data.quadrant_scores?.return_score??'—')}</strong>
               </div>
-              <div style="background:rgba(255,255,255,0.1);border-radius:8px;padding:8px 18px;font-size:13px;">
-                <span style="opacity:0.7;">风险维度&nbsp;</span><strong>${data.risk_score.toFixed(2)}</strong>
+              <div style="background:rgba(16,185,129,0.25);border-radius:8px;padding:8px 18px;font-size:13px;">
+                <span style="opacity:0.85;">💰 收益&nbsp;</span><strong>${(data.quadrant_scores?.yield_score??'—')}</strong>
+              </div>
+              <div style="background:rgba(239,68,68,0.25);border-radius:8px;padding:8px 18px;font-size:13px;">
+                <span style="opacity:0.85;">⚡ 风险&nbsp;</span><strong>${(data.quadrant_scores?.risk_score??'—')}</strong>
+              </div>
+              <div style="background:rgba(139,92,246,0.25);border-radius:8px;padding:8px 18px;font-size:13px;">
+                <span style="opacity:0.85;">🎮 管控&nbsp;</span><strong>${(data.quadrant_scores?.control_score??'—')}</strong>
               </div>
               <div style="background:rgba(255,255,255,0.1);border-radius:8px;padding:8px 18px;font-size:13px;">
                 <span style="opacity:0.7;">投资建议&nbsp;</span><strong>${data.recommendation}</strong>
@@ -698,12 +798,11 @@ async function exportAssessmentReport() {
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:32px;">
             ${[
               ['平均房价 ADR', fd.adr ? fd.adr+' 元/晚' : '—'],
+              ['PCF 日现金流', fd.pcf_daily ? fd.pcf_daily.toLocaleString()+' 元/天' : '—'],
+              ['分账频率', ({daily:'日分账',weekly:'周分账',biweekly:'双周分账'}[fd.irr_frequency]||'—')],
               ['3km内电竞馆总数', venueTotal+' 家'],
               ['直接竞品电竞酒店', esHotels.length+' 家'],
               ['同档次商务酒店', bizHotels.length+' 家'],
-              ['电竞馆分布（1km内/1-2km/2-3km）',
-                `${fd.esports_venue_distribution?.['1km以内']||0} / ${fd.esports_venue_distribution?.['1-2km']||0} / ${fd.esports_venue_distribution?.['2-3km']||0} 家`],
-              ['地理位置', fd.geographic_location ? fd.geographic_location.slice(0,40)+(fd.geographic_location.length>40?'…':'') : '—'],
             ].map(([k,v])=>`
               <div style="background:#f9fafb;border-radius:8px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;">
                 <span style="color:#6b7280;font-size:13px;">${k}</span>
@@ -711,10 +810,10 @@ async function exportAssessmentReport() {
               </div>`).join('')}
           </div>
 
-          <!-- ======= 六维评分 ======= -->
+          <!-- ======= 八维评分（四象限）======= -->
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px;">
             <span style="width:4px;height:20px;background:#6366f1;border-radius:2px;display:inline-block;"></span>
-            <span style="font-size:16px;font-weight:700;color:#1f2937;">六维评分详情</span>
+            <span style="font-size:16px;font-weight:700;color:#1f2937;">八维评分详情（四象限）</span>
           </div>
           <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:32px;">
             <thead>
