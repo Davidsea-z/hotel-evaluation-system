@@ -126,23 +126,23 @@ function addEsportsHotel() {
             <div class="hotel-item-grid">
                 <div class="form-group">
                     <label>酒店名称 <span class="required">*</span></label>
-                    <input type="text" name="esports_hotel_name" placeholder="例如：XX电竞酒店" required />
+                    <input type="text" id="esports_hotel_name_${esportsHotelsCount}" name="esports_hotel_name" placeholder="例如：XX电竞酒店" required />
                 </div>
                 <div class="form-group">
                     <label>距离（km） <span class="required">*</span></label>
-                    <input type="number" name="esports_hotel_distance" min="0" step="0.1" placeholder="0.5" required />
+                    <input type="number" id="esports_hotel_distance_${esportsHotelsCount}" name="esports_hotel_distance" min="0" step="0.1" placeholder="0.5" required />
                 </div>
                 <div class="form-group">
                     <label>房间数</label>
-                    <input type="number" name="esports_hotel_rooms" min="1" placeholder="30" />
+                    <input type="number" id="esports_hotel_rooms_${esportsHotelsCount}" name="esports_hotel_rooms" min="1" placeholder="30" />
                 </div>
                 <div class="form-group">
                     <label>价格区间（元/晚）</label>
-                    <input type="text" name="esports_hotel_price_range" placeholder="200-500" />
+                    <input type="text" id="esports_hotel_price_range_${esportsHotelsCount}" name="esports_hotel_price_range" placeholder="200-500" />
                 </div>
                 <div class="form-group">
                     <label>等级/星级</label>
-                    <input type="text" name="esports_hotel_grade" placeholder="三星级" />
+                    <input type="text" id="esports_hotel_grade_${esportsHotelsCount}" name="esports_hotel_grade" placeholder="三星级" />
                 </div>
             </div>
         </div>
@@ -182,23 +182,23 @@ function addBusinessHotel() {
             <div class="hotel-item-grid">
                 <div class="form-group">
                     <label>酒店名称 <span class="required">*</span></label>
-                    <input type="text" name="business_hotel_name" placeholder="例如：XX商务酒店" required />
+                    <input type="text" id="business_hotel_name_${businessHotelsCount}" name="business_hotel_name" placeholder="例如：XX商务酒店" required />
                 </div>
                 <div class="form-group">
                     <label>距离（km） <span class="required">*</span></label>
-                    <input type="number" name="business_hotel_distance" min="0" step="0.1" placeholder="0.5" required />
+                    <input type="number" id="business_hotel_distance_${businessHotelsCount}" name="business_hotel_distance" min="0" step="0.1" placeholder="0.5" required />
                 </div>
                 <div class="form-group">
                     <label>房间数</label>
-                    <input type="number" name="business_hotel_rooms" min="1" placeholder="100" />
+                    <input type="number" id="business_hotel_rooms_${businessHotelsCount}" name="business_hotel_rooms" min="1" placeholder="100" />
                 </div>
                 <div class="form-group">
                     <label>价格区间（元/晚）</label>
-                    <input type="text" name="business_hotel_price_range" placeholder="300-600" />
+                    <input type="text" id="business_hotel_price_range_${businessHotelsCount}" name="business_hotel_price_range" placeholder="300-600" />
                 </div>
                 <div class="form-group">
                     <label>等级/星级</label>
-                    <input type="text" name="business_hotel_grade" placeholder="四星级" />
+                    <input type="text" id="business_hotel_grade_${businessHotelsCount}" name="business_hotel_grade" placeholder="四星级" />
                 </div>
             </div>
         </div>
@@ -767,6 +767,9 @@ function setupSmartParse() {
  */
 function getJSONTemplate() {
     return `{
+  "project_name": "顺昌大酒店电竞改造项目",
+  "adr": 299,
+
   "geographic_location": "位于未来科技城核心区，毗邻阿里巴巴西溪园区、杭师大仓前校区，西溪银泰城商圈、杭州西站交通枢纽环绕，地铁5号线直达",
   
   "core_customer_flow": {
@@ -1048,24 +1051,55 @@ function fillFormWithParsedData(data) {
         }
     }
     
+    // 填充 project_name → 酒店名称（avgPrice 所在的滴灌通计算器标题区域无project字段，直接写入页面title或忽略）
+    // project_name 填入 avgPrice 上方如有项目名称字段则填入，否则可通过 adr 字段映射
+    if (data.project_name) {
+        // 尝试填入项目名称（如存在对应元素）
+        const projElem = document.getElementById('project_name');
+        if (projElem) {
+            projElem.value = data.project_name;
+            console.log('✓ 项目名称已填充:', data.project_name);
+        } else {
+            console.log('ℹ 表单中无 project_name 元素，跳过（值为:', data.project_name, ')');
+        }
+    }
+
+    // 填充 adr → avgPrice（平均房价ADR）
+    const adrValue = data.adr || data.avg_daily_rate || data.average_daily_rate;
+    if (adrValue) {
+        const adrElem = document.getElementById('avgPrice');
+        if (adrElem) {
+            adrElem.value = adrValue;
+            // 触发 calculate() 更新RevPAR等联动计算
+            if (typeof calculate === 'function') calculate();
+            console.log('✓ ADR（平均房价）已填充:', adrValue);
+        } else {
+            console.warn('✗ 找不到 avgPrice 元素');
+        }
+    }
+
     // 清空并重建电竞酒店列表
-    const esportsHotelList = document.getElementById('esports-hotel-list');
-    if (esportsHotelList && data.esports_hotel_distribution.length > 0) {
+    const esportsHotelContainer = document.getElementById('esports-hotels-container');
+    if (esportsHotelContainer && data.esports_hotel_distribution && data.esports_hotel_distribution.length > 0) {
         try {
-            esportsHotelList.innerHTML = '';
+            esportsHotelContainer.innerHTML = '';
             esportsHotelsCount = 0;
             
             console.log(`准备添加 ${data.esports_hotel_distribution.length} 个电竞酒店`);
             data.esports_hotel_distribution.forEach((hotel, index) => {
                 addEsportsHotel();
-                const lastIndex = esportsHotelsCount - 1;
-                const nameElem = document.getElementById(`esports_hotel_name_${lastIndex}`);
-                const distElem = document.getElementById(`esports_hotel_distance_${lastIndex}`);
-                const roomsElem = document.getElementById(`esports_hotel_rooms_${lastIndex}`);
+                const curIdx = esportsHotelsCount;
+                const nameElem = document.getElementById(`esports_hotel_name_${curIdx}`);
+                const distElem = document.getElementById(`esports_hotel_distance_${curIdx}`);
+                const roomsElem = document.getElementById(`esports_hotel_rooms_${curIdx}`);
+                const priceElem = document.getElementById(`esports_hotel_price_range_${curIdx}`);
+                const gradeElem = document.getElementById(`esports_hotel_grade_${curIdx}`);
                 
                 if (nameElem) nameElem.value = hotel.name || '';
                 if (distElem) distElem.value = hotel.distance || '';
                 if (roomsElem) roomsElem.value = hotel.rooms || '';
+                if (priceElem) priceElem.value = hotel.price_range || '';
+                if (gradeElem) gradeElem.value = hotel.grade || '';
                 
                 console.log(`✓ 电竞酒店${index + 1}已添加:`, hotel);
             });
@@ -1075,23 +1109,27 @@ function fillFormWithParsedData(data) {
     }
     
     // 清空并重建商务酒店列表
-    const businessHotelList = document.getElementById('business-hotel-list');
-    if (businessHotelList && data.business_hotel_distribution.length > 0) {
+    const businessHotelContainer = document.getElementById('business-hotels-container');
+    if (businessHotelContainer && data.business_hotel_distribution && data.business_hotel_distribution.length > 0) {
         try {
-            businessHotelList.innerHTML = '';
+            businessHotelContainer.innerHTML = '';
             businessHotelsCount = 0;
             
             console.log(`准备添加 ${data.business_hotel_distribution.length} 个商务酒店`);
             data.business_hotel_distribution.forEach((hotel, index) => {
                 addBusinessHotel();
-                const lastIndex = businessHotelsCount - 1;
-                const nameElem = document.getElementById(`business_hotel_name_${lastIndex}`);
-                const distElem = document.getElementById(`business_hotel_distance_${lastIndex}`);
-                const roomsElem = document.getElementById(`business_hotel_rooms_${lastIndex}`);
+                const curIdx = businessHotelsCount;
+                const nameElem = document.getElementById(`business_hotel_name_${curIdx}`);
+                const distElem = document.getElementById(`business_hotel_distance_${curIdx}`);
+                const roomsElem = document.getElementById(`business_hotel_rooms_${curIdx}`);
+                const priceElem = document.getElementById(`business_hotel_price_range_${curIdx}`);
+                const gradeElem = document.getElementById(`business_hotel_grade_${curIdx}`);
                 
                 if (nameElem) nameElem.value = hotel.name || '';
                 if (distElem) distElem.value = hotel.distance || '';
                 if (roomsElem) roomsElem.value = hotel.rooms || '';
+                if (priceElem) priceElem.value = hotel.price_range || '';
+                if (gradeElem) gradeElem.value = hotel.grade || '';
                 
                 console.log(`✓ 商务酒店${index + 1}已添加:`, hotel);
             });
