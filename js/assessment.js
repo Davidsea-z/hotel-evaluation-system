@@ -593,94 +593,27 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ==========================================
-// 智能文本解析功能
+// JSON解析功能
 // ==========================================
 
 function setupSmartParse() {
-    // 格式切换按钮
-    const textTab = document.getElementById('format-text-tab');
-    const jsonTab = document.getElementById('format-json-tab');
-    const textPanel = document.getElementById('text-format-panel');
-    const jsonPanel = document.getElementById('json-format-panel');
-    
-    // 文本格式元素
-    const parseTextBtn = document.getElementById('parse-text-btn');
-    const clearTextBtn = document.getElementById('clear-text-btn');
-    const textInput = document.getElementById('smart-parse-input');
-    
-    // JSON格式元素
     const parseJsonBtn = document.getElementById('parse-json-btn');
     const clearJsonBtn = document.getElementById('clear-json-btn');
     const jsonInput = document.getElementById('json-parse-input');
     const copyTemplateBtn = document.getElementById('copy-json-template-btn');
-    
-    // 结果提示
     const parseResult = document.getElementById('parse-result');
     const parseError = document.getElementById('parse-error');
     const errorMessage = document.getElementById('error-message');
-    
-    // 切换到文本格式
-    if (textTab) {
-        textTab.addEventListener('click', () => {
-            textTab.style.background = '#3b82f6';
-            textTab.style.color = 'white';
-            textTab.style.borderColor = '#3b82f6';
-            jsonTab.style.background = 'white';
-            jsonTab.style.color = '#6b7280';
-            jsonTab.style.borderColor = '#e5e7eb';
-            textPanel.style.display = 'block';
-            jsonPanel.style.display = 'none';
-        });
-    }
-    
-    // 切换到JSON格式
-    if (jsonTab) {
-        jsonTab.addEventListener('click', () => {
-            jsonTab.style.background = '#3b82f6';
-            jsonTab.style.color = 'white';
-            jsonTab.style.borderColor = '#3b82f6';
-            textTab.style.background = 'white';
-            textTab.style.color = '#6b7280';
-            textTab.style.borderColor = '#e5e7eb';
-            jsonPanel.style.display = 'block';
-            textPanel.style.display = 'none';
-        });
-    }
-    
+
     // 获取JSON模板
     if (copyTemplateBtn && jsonInput) {
         copyTemplateBtn.addEventListener('click', () => {
-            const template = getJSONTemplate();
-            jsonInput.value = template;
+            jsonInput.value = getJSONTemplate();
             alert('✓ JSON模板已加载！\n请根据您的项目实际情况修改数据');
         });
     }
-    
-    if (!parseTextBtn || !textInput) return;
-    
-    // 文本格式解析按钮
-    parseTextBtn.addEventListener('click', () => {
-        const text = textInput.value.trim();
-        if (!text) {
-            showError('请先粘贴文本内容');
-            return;
-        }
-        
-        try {
-            console.log('开始解析文本，长度:', text.length);
-            const parsedData = parseInvestmentText(text);
-            console.log('解析结果:', parsedData);
-            
-            fillFormWithParsedData(parsedData);
-            showSuccess();
-            scrollToForm();
-        } catch (error) {
-            console.error('解析失败详情:', error);
-            showError('文本格式解析失败：' + error.message);
-        }
-    });
-    
-    // JSON格式解析按钮
+
+    // 解析JSON按钮
     if (parseJsonBtn && jsonInput) {
         parseJsonBtn.addEventListener('click', () => {
             const jsonText = jsonInput.value.trim();
@@ -688,50 +621,37 @@ function setupSmartParse() {
                 showError('请先粘贴JSON数据或点击"获取JSON模板"');
                 return;
             }
-            
             try {
-                console.log('开始解析JSON，长度:', jsonText.length);
                 const parsedData = JSON.parse(jsonText);
                 console.log('JSON解析结果:', parsedData);
-                
                 fillFormWithParsedData(parsedData);
                 showSuccess();
-                scrollToForm();
+                const formContainer = document.getElementById('assessment-form-container');
+                if (formContainer) formContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
             } catch (error) {
                 console.error('JSON解析失败:', error);
-                showError('JSON格式错误：' + error.message + '\n请检查JSON格式是否正确');
+                showError('JSON格式错误：' + error.message);
             }
         });
     }
-    
-    // 清空文本按钮
-    if (clearTextBtn && textInput) {
-        clearTextBtn.addEventListener('click', () => {
-            textInput.value = '';
-            hideMessages();
-        });
-    }
-    
-    // 清空JSON按钮
+
+    // 清空按钮
     if (clearJsonBtn && jsonInput) {
         clearJsonBtn.addEventListener('click', () => {
             jsonInput.value = '';
-            hideMessages();
+            if (parseResult) parseResult.style.display = 'none';
+            if (parseError) parseError.style.display = 'none';
         });
     }
-    
-    // 显示成功消息
+
     function showSuccess() {
         if (parseResult) {
             parseResult.style.display = 'block';
             if (parseError) parseError.style.display = 'none';
-            setTimeout(() => {
-                parseResult.style.display = 'none';
-            }, 3000);
+            setTimeout(() => { parseResult.style.display = 'none'; }, 3000);
         }
     }
-    
-    // 显示错误消息
+
     function showError(msg) {
         if (parseError && errorMessage) {
             errorMessage.textContent = msg;
@@ -739,23 +659,6 @@ function setupSmartParse() {
             if (parseResult) parseResult.style.display = 'none';
         } else {
             alert(msg);
-        }
-    }
-    
-    // 隐藏所有消息
-    function hideMessages() {
-        if (parseResult) parseResult.style.display = 'none';
-        if (parseError) parseError.style.display = 'none';
-    }
-    
-    // 滚动到表单
-    function scrollToForm() {
-        const formContainer = document.getElementById('assessment-form-container');
-        if (formContainer) {
-            formContainer.scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'start' 
-            });
         }
     }
 }
@@ -822,127 +725,6 @@ function getJSONTemplate() {
 }`;
 }
 
-/**
- * 智能解析投资评估文本
- * @param {string} text - 用户粘贴的文本
- * @returns {Object} 解析后的数据对象
- */
-function parseInvestmentText(text) {
-    const data = {
-        geographic_location: '',
-        core_customer_flow: {
-            '企业年轻员工': '',
-            '高校学生': '',
-            '商旅与参会客群': ''
-        },
-        competitive_pattern: {
-            '直接竞品': '',
-            '潜在竞品': '',
-            '替代娱乐': ''
-        },
-        esports_venue_distribution: {
-            '1km以内': 0,
-            '1-2km': 0,
-            '2-3km': 0,
-            '备注': ''
-        },
-        esports_hotel_distribution: [],
-        business_hotel_distribution: []
-    };
-    
-    // 按行分割文本
-    const lines = text.split('\n').map(line => line.trim()).filter(line => line);
-    
-    for (let line of lines) {
-        // 地理位置
-        if (/^地理位置[：:]/i.test(line)) {
-            data.geographic_location = line.replace(/^地理位置[：:]\s*/i, '');
-        }
-        
-        // 核心客流 - 企业员工
-        if (/^企业[员工年轻]*[：:]/i.test(line) || /企业.*员工/i.test(line)) {
-            data.core_customer_flow['企业年轻员工'] = line.replace(/^[^：:]+[：:]\s*/i, '');
-        }
-        
-        // 核心客流 - 高校学生
-        if (/^[高校大学]*学生[：:]/i.test(line) || /高校.*学生/i.test(line)) {
-            data.core_customer_flow['高校学生'] = line.replace(/^[^：:]+[：:]\s*/i, '');
-        }
-        
-        // 核心客流 - 商旅客群
-        if (/^商旅|商务.*[客群旅客][：:]/i.test(line)) {
-            data.core_customer_flow['商旅与参会客群'] = line.replace(/^[^：:]+[：:]\s*/i, '');
-        }
-        
-        // 竞争格局 - 直接竞品
-        if (/^直接竞品[：:]/i.test(line)) {
-            data.competitive_pattern['直接竞品'] = line.replace(/^直接竞品[：:]\s*/i, '');
-        }
-        
-        // 竞争格局 - 潜在竞品
-        if (/^潜在竞品[：:]/i.test(line)) {
-            data.competitive_pattern['潜在竞品'] = line.replace(/^潜在竞品[：:]\s*/i, '');
-        }
-        
-        // 竞争格局 - 替代娱乐
-        if (/^替代娱乐[：:]/i.test(line)) {
-            data.competitive_pattern['替代娱乐'] = line.replace(/^替代娱乐[：:]\s*/i, '');
-        }
-        
-        // 电竞馆分布 - 1km以内
-        if (/1\s*km\s*以内|1\s*公里以内/i.test(line)) {
-            const match = line.match(/(\d+)\s*家/);
-            if (match) data.esports_venue_distribution['1km以内'] = parseInt(match[1]);
-        }
-        
-        // 电竞馆分布 - 1-2km
-        if (/1\s*-\s*2\s*km|1\s*到\s*2\s*公里/i.test(line)) {
-            const match = line.match(/(\d+)\s*家/);
-            if (match) data.esports_venue_distribution['1-2km'] = parseInt(match[1]);
-        }
-        
-        // 电竞馆分布 - 2-3km
-        if (/2\s*-\s*3\s*km|2\s*到\s*3\s*公里/i.test(line)) {
-            const match = line.match(/(\d+)\s*家/);
-            if (match) data.esports_venue_distribution['2-3km'] = parseInt(match[1]);
-        }
-        
-        // 电竞馆备注
-        if (/电竞馆备注[：:]/i.test(line)) {
-            data.esports_venue_distribution['备注'] = line.replace(/^电竞馆备注[：:]\s*/i, '');
-        }
-        
-        // 电竞酒店分布
-        if (/电竞酒店\d+[：:]/i.test(line)) {
-            // 格式: 电竞酒店1：XX酒店,1.2公里,50间房
-            const parts = line.replace(/^电竞酒店\d+[：:]\s*/i, '').split(/[,，]/);
-            if (parts.length >= 3) {
-                const hotel = {
-                    name: parts[0].trim(),
-                    distance: parseFloat(parts[1].replace(/[公里km]/gi, '').trim()),
-                    rooms: parseInt(parts[2].replace(/[间房]/gi, '').trim())
-                };
-                data.esports_hotel_distribution.push(hotel);
-            }
-        }
-        
-        // 商务酒店分布
-        if (/商务酒店\d+[：:]/i.test(line)) {
-            // 格式: 商务酒店1：如家酒店,0.8公里,80间房
-            const parts = line.replace(/^商务酒店\d+[：:]\s*/i, '').split(/[,，]/);
-            if (parts.length >= 3) {
-                const hotel = {
-                    name: parts[0].trim(),
-                    distance: parseFloat(parts[1].replace(/[公里km]/gi, '').trim()),
-                    rooms: parseInt(parts[2].replace(/[间房]/gi, '').trim())
-                };
-                data.business_hotel_distribution.push(hotel);
-            }
-        }
-    }
-    
-    return data;
-}
 
 /**
  * 用解析的数据填充表单

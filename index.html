@@ -430,39 +430,10 @@
                         </svg>
                         <h3 style="font-size: 1.125rem; font-weight: 700; color: #1f2937; margin: 0;">智能数据导入</h3>
                     </div>
-                    <div style="display: flex; gap: 0.5rem;">
-                        <button type="button" id="format-text-tab" class="format-tab active" style="padding: 0.5rem 1rem; border: 2px solid #3b82f6; background: #3b82f6; color: white; border-radius: 6px; cursor: pointer; font-weight: 600;">
-                            文本格式
-                        </button>
-                        <button type="button" id="format-json-tab" class="format-tab" style="padding: 0.5rem 1rem; border: 2px solid #e5e7eb; background: white; color: #6b7280; border-radius: 6px; cursor: pointer; font-weight: 600;">
-                            JSON格式
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- 文本格式输入 -->
-                <div id="text-format-panel" style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 2px dashed #3b82f6; border-radius: 12px; padding: 1.5rem;">
-                    <textarea 
-                        id="smart-parse-input" 
-                        placeholder="粘贴您的项目描述文本，支持自动识别六大字段内容&#10;&#10;示例格式：&#10;地理位置：阿里巴巴西溪园区旁，未来科技城核心区...&#10;企业员工：周边阿里、网易等大厂，年轻员工5万+...&#10;高校学生：杭师大距离2公里，学生3万人...&#10;商旅客群：西湖会展中心1公里，商务出差频繁...&#10;直接竞品：3km内无电竞酒店...&#10;潜在竞品：2家传统网咖...&#10;替代娱乐：电影院、KTV各2家...&#10;1km以内电竞馆：5家&#10;1-2km电竞馆：8家&#10;2-3km电竞馆：3家&#10;电竞馆备注：市场需求旺盛...&#10;电竞酒店1：XX酒店,1.2公里,50间房&#10;电竞酒店2：YY酒店,2.5公里,30间房&#10;商务酒店1：如家酒店,0.8公里,80间房&#10;商务酒店2：汉庭酒店,1.5公里,100间房"
-                        style="width: 100%; min-height: 150px; padding: 1rem; border: 1px solid #3b82f6; border-radius: 8px; font-size: 0.95rem; line-height: 1.6; font-family: 'Courier New', monospace; resize: vertical; background: white;"
-                    ></textarea>
-                    <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                        <button type="button" id="parse-text-btn" class="btn btn-primary" style="flex: 1;">
-                            <svg style="width: 20px; height: 20px; display: inline-block; margin-right: 0.5rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="9 11 12 14 22 4"/>
-                                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-                            </svg>
-                            解析文本格式
-                        </button>
-                        <button type="button" id="clear-text-btn" class="btn" style="padding: 0.75rem 1.5rem; border: 2px solid #e5e7eb; background: white; color: #6b7280;">
-                            清空
-                        </button>
-                    </div>
                 </div>
                 
                 <!-- JSON格式输入 -->
-                <div id="json-format-panel" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px dashed #f59e0b; border-radius: 12px; padding: 1.5rem; display: none;">
+                <div id="json-format-panel" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px dashed #f59e0b; border-radius: 12px; padding: 1.5rem;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                         <span style="color: #92400e; font-weight: 600;">📋 粘贴JSON数据，或点击"获取模板"按钮</span>
                         <button type="button" id="copy-json-template-btn" class="btn" style="padding: 0.5rem 1rem; border: 2px solid #f59e0b; background: white; color: #f59e0b; font-size: 0.875rem;">
