@@ -932,15 +932,15 @@ function setupSmartParse() {
  */
 function getJSONTemplate() {
     return `{
-  "project_name": "顺昌大酒店电竞改造项目",
+  "project_name": "某某酒店电竞改造项目",
   "adr": 299,
 
-  "geographic_location": "位于未来科技城核心区，毗邻阿里巴巴西溪园区、杭师大仓前校区，西溪银泰城商圈、杭州西站交通枢纽环绕，地铁5号线直达",
+  "geographic_location": "位于某市核心商圈，毗邻大型科技园区及高校，周边有大型购物中心及交通枢纽，地铁直达",
   
   "core_customer_flow": {
-    "企业年轻员工": "周边阿里巴巴、网易、字节跳动等大厂，互联网从业者约5万人，年龄25-35岁，消费能力强",
-    "高校学生": "杭师大仓前校区距离2公里，学生总数约3万人，电竞社团活跃，周末娱乐需求大",
-    "商旅与参会客群": "西湖国际博览中心1公里，商务出差、会展参会人员密集，日均流量超1000人次"
+    "企业年轻员工": "周边科技园区互联网从业者约5万人，年龄25-35岁，消费能力强",
+    "高校学生": "附近高校距离2公里，学生总数约3万人，电竞社团活跃，周末娱乐需求大",
+    "商旅与参会客群": "周边会展中心约1公里，商务出差及会展参会人员密集，日均流量超1000人次"
   },
   
   "competitive_pattern": {
@@ -952,38 +952,42 @@ function getJSONTemplate() {
   "esports_venue_distribution": {
     "1km以内": 5,
     "1-2km": 8,
-    "2-3km": 3,
-    "备注": "周边电竞馆总数16家，市场需求旺盛但不饱和"
+    "2-3km": 3
   },
   
   "esports_hotel_distribution": [
     {
-      "name": "XX电竞酒店",
+      "name": "A电竞酒店",
       "distance": 1.2,
-      "rooms": 50
+      "rooms": 50,
+      "price_range": "200-350元"
     },
     {
-      "name": "YY电竞主题酒店",
+      "name": "B电竞主题酒店",
       "distance": 2.8,
-      "rooms": 30
+      "rooms": 30,
+      "price_range": "180-280元"
     }
   ],
   
   "business_hotel_distribution": [
     {
-      "name": "如家酒店",
+      "name": "某经济型酒店A",
       "distance": 0.8,
-      "rooms": 80
+      "rooms": 80,
+      "price_range": "150-250元"
     },
     {
-      "name": "汉庭酒店",
+      "name": "某经济型酒店B",
       "distance": 1.5,
-      "rooms": 100
+      "rooms": 100,
+      "price_range": "160-260元"
     },
     {
-      "name": "全季酒店",
+      "name": "某中档酒店C",
       "distance": 2.0,
-      "rooms": 120
+      "rooms": 120,
+      "price_range": "220-380元"
     }
   ]
 }`;
