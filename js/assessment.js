@@ -46,6 +46,7 @@ function loadAssessmentDraft() {
         if (draft) {
             const data = JSON.parse(draft);
             // 填充表单
+            document.getElementById('project_name').value = data.project_name || '';
             document.getElementById('geographic_location').value = data.geographic_location || '';
             document.getElementById('customer_enterprise').value = data.core_customer_flow?.企业年轻员工 || '';
             document.getElementById('customer_student').value = data.core_customer_flow?.高校学生 || '';
@@ -223,6 +224,7 @@ function removeBusinessHotel(hotelId) {
 function getAssessmentFormData() {
     // 基础字段
     const data = {
+        project_name: document.getElementById('project_name').value.trim(),
         geographic_location: document.getElementById('geographic_location').value.trim(),
         core_customer_flow: {
             '企业年轻员工': document.getElementById('customer_enterprise').value.trim(),
@@ -831,16 +833,12 @@ function fillFormWithParsedData(data) {
         }
     }
     
-    // 填充 project_name → 酒店名称（avgPrice 所在的滴灌通计算器标题区域无project字段，直接写入页面title或忽略）
-    // project_name 填入 avgPrice 上方如有项目名称字段则填入，否则可通过 adr 字段映射
+    // 填充 project_name → 项目名称
     if (data.project_name) {
-        // 尝试填入项目名称（如存在对应元素）
         const projElem = document.getElementById('project_name');
         if (projElem) {
             projElem.value = data.project_name;
             console.log('✓ 项目名称已填充:', data.project_name);
-        } else {
-            console.log('ℹ 表单中无 project_name 元素，跳过（值为:', data.project_name, ')');
         }
     }
 
@@ -850,11 +848,8 @@ function fillFormWithParsedData(data) {
         const adrElem = document.getElementById('avgPrice');
         if (adrElem) {
             adrElem.value = adrValue;
-            // 触发 calculate() 更新RevPAR等联动计算
             if (typeof calculate === 'function') calculate();
             console.log('✓ ADR（平均房价）已填充:', adrValue);
-        } else {
-            console.warn('✗ 找不到 avgPrice 元素');
         }
     }
 
