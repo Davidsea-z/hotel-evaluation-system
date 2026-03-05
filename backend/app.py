@@ -190,34 +190,59 @@ class InvestmentEvaluator:
         计算竞争格局得分 (0-10分)
         
         评分规则:
-        - 分析直接竞品、潜在竞品、替代娱乐三个维度
-        - 竞争对手越少，得分越高
+        - 结合文本描述和实际竞品数量
+        - 直接竞品（电竞酒店）影响最大
+        - 潜在竞品（商务酒店）和电竞馆密度影响次之
+        - 竞争对手越多，得分越低，风险越高
         """
         pattern = self.data.get('competitive_pattern', {})
         
-        direct = pattern.get('直接竞品', '')
-        potential = pattern.get('潜在竞品', '')
-        substitute = pattern.get('替代娱乐', '')
+        # 获取实际竞品数据
+        esports_hotels = self.data.get('esports_hotel_distribution', [])
+        business_hotels = self.data.get('business_hotel_distribution', [])
+        venue_dist = self.data.get('esports_venue_distribution', {})
         
-        score = 10.0  # 基础分（假设无竞争）
+        # 统计数量
+        esports_count = len(esports_hotels)
+        business_count = len(business_hotels)
+        venue_count = venue_dist.get('1km以内', 0) + venue_dist.get('1-2km', 0) + venue_dist.get('2-3km', 0)
         
-        # 直接竞品影响最大
-        if '无' in direct or '较少' in direct:
-            score -= 0
-        elif '较多' in direct or '密集' in direct:
-            score -= 4
+        score = 10.0
+        
+        # 1. 电竞酒店竞争（权重最高）
+        if esports_count == 0:
+            score -= 0  # 市场空白，不扣分
+        elif esports_count <= 2:
+            score -= 0.5  # 竞争很少
+        elif esports_count <= 4:
+            score -= 1.5  # 竞争适中
+        elif esports_count <= 6:
+            score -= 2.5  # 竞争较激烈
+        elif esports_count <= 8:
+            score -= 3.5  # 竞争激烈
         else:
-            score -= 2
+            score -= 4.5  # 竞争非常激烈
         
-        # 潜在竞品
-        if '较多' in potential:
-            score -= 2
-        elif '一般' in potential:
-            score -= 1
+        # 2. 电竞馆密度（次要影响）
+        if venue_count >= 30:
+            score -= 1.5  # 市场过度饱和
+        elif venue_count >= 25:
+            score -= 1.0
+        elif venue_count >= 20:
+            score -= 0.5
         
-        # 替代娱乐
-        if '丰富' in substitute or '较多' in substitute:
+        # 3. 商务酒店潜在竞争
+        if business_count >= 10:
             score -= 1.5
+        elif business_count >= 8:
+            score -= 1.0
+        elif business_count >= 5:
+            score -= 0.5
+        
+        # 4. 文本描述修正（加分项）
+        direct = pattern.get('直接竞品', '')
+        if '市场空白' in direct or '定位差异' in direct or '差异化' in direct:
+            score += 0.5  # 虽有竞品但存在差异化机会
         
         return max(0, min(10, score))
     
