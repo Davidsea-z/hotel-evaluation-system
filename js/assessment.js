@@ -24,6 +24,15 @@ let assessmentDraftData = {};
 let esportsHotelsCount = 0;
 let businessHotelsCount = 0;
 
+// 评估表单 ADR 联动投资模型 avgPrice
+function syncAdr(val) {
+    const adrElem = document.getElementById('avgPrice');
+    if (adrElem) {
+        adrElem.value = val;
+        if (typeof calculate === 'function') calculate();
+    }
+}
+
 // ==========================================
 // LocalStorage草稿管理
 // ==========================================
@@ -47,6 +56,8 @@ function loadAssessmentDraft() {
             const data = JSON.parse(draft);
             // 填充表单
             document.getElementById('project_name').value = data.project_name || '';
+            const assessAdr = document.getElementById('assessment_adr');
+            if (assessAdr && data.adr != null) { assessAdr.value = data.adr; syncAdr(data.adr); }
             document.getElementById('geographic_location').value = data.geographic_location || '';
             document.getElementById('customer_enterprise').value = data.core_customer_flow?.企业年轻员工 || '';
             document.getElementById('customer_student').value = data.core_customer_flow?.高校学生 || '';
@@ -225,6 +236,7 @@ function getAssessmentFormData() {
     // 基础字段
     const data = {
         project_name: document.getElementById('project_name').value.trim(),
+        adr: parseFloat(document.getElementById('assessment_adr').value) || null,
         geographic_location: document.getElementById('geographic_location').value.trim(),
         core_customer_flow: {
             '企业年轻员工': document.getElementById('customer_enterprise').value.trim(),
@@ -742,14 +754,16 @@ function fillFormWithParsedData(data) {
         if (elem) { elem.value = data.project_name; console.log('✓ 项目名称已填充:', data.project_name); }
     }
 
-    // 填充 adr → avgPrice（平均房价ADR）
+    // 填充 adr → assessment_adr（评估表单内）+ avgPrice（投资模型区）
     const adrValue = (data.adr != null) ? data.adr : (data.avg_daily_rate != null ? data.avg_daily_rate : data.average_daily_rate);
     if (adrValue != null) {
+        const assessAdr = document.getElementById('assessment_adr');
+        if (assessAdr) { assessAdr.value = adrValue; console.log('✓ ADR（评估表单）已填充:', adrValue); }
         const adrElem = document.getElementById('avgPrice');
         if (adrElem) {
             adrElem.value = adrValue;
             if (typeof calculate === 'function') calculate();
-            console.log('✓ ADR（平均房价）已填充:', adrValue);
+            console.log('✓ ADR（投资模型）已同步:', adrValue);
         }
     }
 

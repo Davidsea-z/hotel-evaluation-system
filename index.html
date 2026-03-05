@@ -472,16 +472,29 @@
             <div id="assessment-form-container" class="assessment-form-container">
                 <form id="investmentAssessmentForm" class="investment-assessment-form">
                     
-                    <!-- 项目名称 -->
+                    <!-- 项目名称 + ADR -->
                     <div class="assessment-form-section">
-                        <div class="form-group">
-                            <label for="project_name">项目名称</label>
-                            <input 
-                                type="text" 
-                                id="project_name" 
-                                name="project_name"
-                                placeholder="例如：顺昌大酒店（杭州滨江聚才路地铁站店）"
-                            />
+                        <div style="display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: end;">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label for="project_name">项目名称</label>
+                                <input 
+                                    type="text" 
+                                    id="project_name" 
+                                    name="project_name"
+                                    placeholder="例如：顺昌大酒店（杭州滨江聚才路地铁站店）"
+                                />
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0; min-width: 160px;">
+                                <label for="assessment_adr">平均房价 ADR（元/晚）</label>
+                                <input 
+                                    type="number" 
+                                    id="assessment_adr" 
+                                    name="assessment_adr"
+                                    placeholder="360"
+                                    min="0" step="1"
+                                    oninput="syncAdr(this.value)"
+                                />
+                            </div>
                         </div>
                     </div>
 
