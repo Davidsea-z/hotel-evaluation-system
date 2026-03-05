@@ -57,7 +57,6 @@ function loadAssessmentDraft() {
             document.getElementById('venue_2km').value = data.esports_venue_distribution?.['1-2km'] || 0;
             document.getElementById('venue_3km').value = data.esports_venue_distribution?.['2-3km'] || 0;
             document.getElementById('venue_remarks').value = data.esports_venue_distribution?.['备注'] || '';
-            document.getElementById('business_area_remarks').value = data.business_area_remarks || '';
             
             // 恢复动态酒店表单
             if (data.esports_hotel_distribution && data.esports_hotel_distribution.length > 0) {
@@ -242,8 +241,7 @@ function getAssessmentFormData() {
             'remarks': document.getElementById('venue_remarks').value.trim()
         },
         esports_hotel_distribution: [],
-        business_hotel_distribution: [],
-        business_area_remarks: document.getElementById('business_area_remarks').value.trim()
+        business_hotel_distribution: []
     };
     
     // 收集电竞酒店数据
