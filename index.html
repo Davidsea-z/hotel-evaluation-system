@@ -436,7 +436,7 @@
                 <div id="json-format-panel" style="background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%); border: 2px dashed #6366f1; border-radius: 12px; padding: 1.5rem;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                         <span style="color: #3730a3; font-weight: 600;">📋 粘贴JSON数据，或点击"获取模板"按钮</span>
-                        <button type="button" id="copy-json-template-btn" class="btn" style="padding: 0.5rem 1rem; border: 2px solid #6366f1; background: white; color: #6366f1; font-size: 0.875rem;">
+                        <button type="button" id="copy-json-template-btn" class="btn-secondary">
                             📄 获取JSON模板
                         </button>
                     </div>
@@ -446,14 +446,14 @@
                         style="width: 100%; min-height: 200px; padding: 1rem; border: 1px solid #6366f1; border-radius: 8px; font-size: 0.9rem; line-height: 1.6; font-family: 'Courier New', monospace; resize: vertical; background: white;"
                     ></textarea>
                     <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                        <button type="button" id="parse-json-btn" class="btn btn-primary" style="flex: 1; background: #6366f1; border-color: #6366f1;">
+                        <button type="button" id="parse-json-btn" class="btn-primary" style="flex: 1;">
                             <svg style="width: 20px; height: 20px; display: inline-block; margin-right: 0.5rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polyline points="9 11 12 14 22 4"/>
                                 <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
                             </svg>
                             解析JSON数据
                         </button>
-                        <button type="button" id="clear-json-btn" class="btn" style="padding: 0.75rem 1.5rem; border: 2px solid #e5e7eb; background: white; color: #6b7280;">
+                        <button type="button" id="clear-json-btn" class="btn-secondary">
                             清空
                         </button>
                     </div>
