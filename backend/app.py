@@ -7,7 +7,69 @@
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import re
+import re as _re
+
+
+def _extract_distance_km(text: str) -> float:
+    """从文本中提取第一个出现的公里数，如'约2.5公里'→2.5，未找到返回0。"""
+    m = _re.search(r'(\d+(?:\.\d+)?)\s*(?:公里|km|KM)', text)
+    return float(m.group(1)) if m else 0.0
+
+
+def _extract_rating(text: str) -> float:
+    """提取评分数字，如'4.7/5'或'评分4.7'→4.7，只接受1.0-5.0范围内的值。"""
+    m = _re.search(r'(\d+(?:\.\d+)?)/5', text)
+    if m:
+        v = float(m.group(1))
+        if 1.0 <= v <= 5.0:
+            return v
+    m = _re.search(r'评分(?:高达)?\s*(\d+(?:\.\d+)?)', text)
+    if m:
+        v = float(m.group(1))
+        if 1.0 <= v <= 5.0:
+            return v
+    return 0.0
+
+
+def _extract_review_count(text: str) -> int:
+    """提取评价条数，如'259条评价'→259，未找到返回0。"""
+    m = _re.search(r'(\d+)\s*条评价', text)
+    return int(m.group(1)) if m else 0
+
+
+def _detect_gpu_tier(text: str) -> str:
+    """检测显卡配置档次：flagship(5070+/4080+), high(5060/4070), mid(4060/3070/3080), low(3060-)"""
+    if _re.search(r'RTX\s*(?:40[89]0|5[089]\d0|50[89]0)', text, _re.I) or any(k in text for k in ['4090','4080','5090','5080']):
+        return 'flagship'
+    if _re.search(r'RTX\s*(?:407[05]|5060|5070)', text, _re.I) or any(k in text for k in ['4070','5060','5070']):
+        return 'high'
+    if _re.search(r'RTX\s*(?:3070|3080|4060)', text, _re.I) or any(k in text for k in ['3070','3080','4060']):
+        return 'mid'
+    if _re.search(r'GTX|RTX\s*3060|RTX\s*3050', text, _re.I) or any(k in text for k in ['3060','3050','GTX']):
+        return 'low'
+    return ''
+
+
+def _count_esports_hotels_in_text(text: str) -> int:
+    """从文本中提取电竞酒店数量（如'6家电竞酒店'→6），返回0表示未找到。"""
+    m = _re.search(r'(\d+)\s*家电竞酒店', text)
+    if m:
+        return int(m.group(1))
+    m = _re.search(r'电竞酒店\s*(\d+)\s*家', text)
+    if m:
+        return int(m.group(1))
+    return 0
+
+
+def _is_single_hotel_description(text: str) -> bool:
+    """判断文本是否为单个酒店的详细描述（有名称+距离+详细属性），若是则作为1家处理。"""
+    has_hotel = any(k in text for k in ['酒店','旅馆','民宿'])
+    has_dist  = _re.search(r'\d+(?:\.\d+)?\s*(?:公里|km)', text) is not None
+    has_detail = any(k in text for k in ['评分','显卡','房间','配置','装修','价格','条评价','推荐'])
+    return has_hotel and has_dist and has_detail
+
+
+
 from typing import Dict, List, Any, Tuple
 import logging
 
@@ -187,64 +249,143 @@ class InvestmentEvaluator:
     
     def calculate_competitive_pattern_score(self) -> float:
         """
-        计算竞争格局得分 (0-10分)
+        计算竞争格局得分 (0-10分) — 富文本感知版 v3.0
         
-        评分规则:
-        - 结合文本描述和实际竞品数量
-        - 直接竞品（电竞酒店）影响最大
-        - 潜在竞品（商务酒店）和电竞馆密度影响次之
-        - 竞争对手越多，得分越低，风险越高
+        三层结构（权重不变）：
+          直接竞品 50%  — 从描述文本提取数量、距离、评分、GPU配置、品牌等
+          潜在竞品 30%  — 从描述文本提取电竞酒店总量、档次结构、市场空间
+          替代娱乐 20%  — 从描述文本提取网吧密度、价格区间、市场竞争阶段
         """
         pattern = self.data.get('competitive_pattern', {})
-        
-        # 获取实际竞品数据
-        esports_hotels = self.data.get('esports_hotel_distribution', [])
-        business_hotels = self.data.get('business_hotel_distribution', [])
-        venue_dist = self.data.get('esports_venue_distribution', {})
-        
-        # 统计数量
-        esports_count = len(esports_hotels)
-        business_count = len(business_hotels)
-        venue_count = venue_dist.get('1km以内', 0) + venue_dist.get('1-2km', 0) + venue_dist.get('2-3km', 0)
-        
-        score = 10.0
-        
-        # 1. 电竞酒店竞争（权重最高）
-        if esports_count == 0:
-            score -= 0  # 市场空白，不扣分
-        elif esports_count <= 2:
-            score -= 0.5  # 竞争很少
-        elif esports_count <= 4:
-            score -= 1.5  # 竞争适中
-        elif esports_count <= 6:
-            score -= 2.5  # 竞争较激烈
-        elif esports_count <= 8:
-            score -= 3.5  # 竞争激烈
+        if not isinstance(pattern, dict):
+            pattern = {}
+
+        raw_direct    = pattern.get('直接竞品') or pattern.get('direct') or ''
+        raw_potential = pattern.get('潜在竞品') or pattern.get('potential') or ''
+        raw_substitute= (pattern.get('替代娱乐') or pattern.get('substitute')
+                         or pattern.get('alternative') or '')
+
+        # ── 直接竞品子得分 ──────────────────────────────────────
+        text = str(raw_direct)
+        n = _count_esports_hotels_in_text(text)
+        if n == 0 and _is_single_hotel_description(text):
+            n = 1
+        if n == 0:
+            if any(k in text for k in ['无电竞酒店','市场空白','尚无竞品','0家']):
+                base_d = 10
+            elif any(k in text for k in ['仅1家','仅2家','1家','2家','只有一家','只有两家']):
+                base_d = 8
+            elif any(k in text for k in ['少量','3-5家','3～5家','几家','3家','4家','5家']):
+                base_d = 6
+            elif any(k in text for k in ['较多','多家','6-10家','竞争较激烈']):
+                base_d = 4
+            elif any(k in text for k in ['大量','密集','饱和','遍布']):
+                base_d = 2
+            else:
+                base_d = 6
+        elif n <= 2:
+            base_d = 8
+        elif n <= 5:
+            base_d = 6
+        elif n <= 10:
+            base_d = 4
         else:
-            score -= 4.5  # 竞争非常激烈
-        
-        # 2. 电竞馆密度（次要影响）
-        if venue_count >= 30:
-            score -= 1.5  # 市场过度饱和
-        elif venue_count >= 25:
-            score -= 1.0
-        elif venue_count >= 20:
-            score -= 0.5
-        
-        # 3. 商务酒店潜在竞争
-        if business_count >= 10:
-            score -= 1.5
-        elif business_count >= 8:
-            score -= 1.0
-        elif business_count >= 5:
-            score -= 0.5
-        
-        # 4. 文本描述修正（加分项）
-        direct = pattern.get('直接竞品', '')
-        if '市场空白' in direct or '定位差异' in direct or '差异化' in direct:
-            score += 0.5  # 虽有竞品但存在差异化机会
-        
-        return max(0, min(10, score))
+            base_d = 2
+
+        dist_km = _extract_distance_km(text)
+        if dist_km > 3.0:    base_d += 1.5
+        elif dist_km > 2.0:  base_d += 1.0
+        elif dist_km > 1.0:  base_d += 0.0
+        elif dist_km > 0:    base_d -= 1.5
+
+        rating = _extract_rating(text)
+        if rating >= 4.8:    base_d -= 1.5
+        elif rating >= 4.5:  base_d -= 1.0
+        elif rating >= 4.0:  base_d -= 0.5
+
+        reviews = _extract_review_count(text)
+        if reviews >= 500:   base_d -= 1.0
+        elif reviews >= 200: base_d -= 0.5
+
+        gpu = _detect_gpu_tier(text)
+        if gpu == 'flagship':   base_d -= 1.5
+        elif gpu == 'high':     base_d -= 1.0
+        elif gpu == 'mid':      base_d -= 0.5
+        elif gpu == 'low':      base_d += 0.5
+
+        if '99%用户推荐' in text or '强烈推荐' in text: base_d -= 0.5
+        if any(k in text for k in ['雷神','网鱼','竞悦','超玩']): base_d -= 0.5
+        if any(k in text for k in ['中高端开设空间','市场缺口','供给不足']): base_d += 1.0
+        if any(k in text for k in ['设备老旧','配置落后','装修老']): base_d += 1.0
+
+        s_direct = max(0.0, min(10.0, base_d))
+
+        # ── 潜在竞品子得分 ──────────────────────────────────────
+        text_p = str(raw_potential)
+        n_p = _count_esports_hotels_in_text(text_p)
+        m_biz = _re.search(r'(\d+)\s*家商务酒店', text_p)
+        n_biz = int(m_biz.group(1)) if m_biz else 0
+
+        if n_p == 0:
+            if any(k in text_p for k in ['无中高端','无网咖','竞争缺失','没有威胁']):
+                base_p = 10
+            else:
+                base_p = 6
+        elif n_p <= 3:  base_p = 8
+        elif n_p <= 6:  base_p = 6
+        elif n_p <= 10: base_p = 4
+        else:           base_p = 2
+
+        if any(k in text_p for k in ['多为中低端','中低端为主','均为经济型']):
+            base_p += 1.5
+        elif any(k in text_p for k in ['中高端','品牌旗舰店','奢华']):
+            base_p -= 1.5
+
+        if any(k in text_p for k in ['中高端开设空间较大','市场空间较大','供给不足']):
+            base_p += 1.5
+        elif any(k in text_p for k in ['竞争激烈','趋于饱和','已经饱和']):
+            base_p -= 1.5
+
+        if n_biz >= 50:   base_p -= 1.0
+        elif n_biz >= 20: base_p -= 0.5
+
+        if any(k in text_p for k in ['正在改造','升级中','即将入驻','资本进入']): base_p -= 2.0
+        if any(k in text_p for k in ['设施老旧','无升级迹象','设备落后']): base_p += 1.0
+
+        s_potential = max(0.0, min(10.0, base_p))
+
+        # ── 替代娱乐子得分 ──────────────────────────────────────
+        text_s = str(raw_substitute)
+        base_s = 7.0
+
+        if any(k in text_s for k in ['附近网吧较少','网吧稀少','无网吧','网吧极少']):
+            base_s += 1.5
+        elif any(k in text_s for k in ['连锁经营网吧','连锁网吧','品牌网咖']):
+            base_s -= 0.5
+        elif any(k in text_s for k in ['高端网咖','密集网吧','大量网吧']):
+            base_s -= 2.0
+
+        if any(k in text_s for k in ['品质竞争','品质竞争阶段','进入品质竞争']):
+            base_s += 1.0
+        elif any(k in text_s for k in ['价格战','低价竞争','同质化严重']):
+            base_s -= 1.0
+
+        price_ranges = _re.findall(r'(\d{2,4})[-~至到](\d{2,4})\s*元', text_s)
+        if price_ranges:
+            mids = [(int(a)+int(b))/2 for a, b in price_ranges]
+            avg_mid = sum(mids) / len(mids)
+            if avg_mid >= 400:   base_s += 1.0
+            elif avg_mid < 200:  base_s -= 0.5
+
+        if any(k in text_s for k in ['电影院','KTV','卡拉OK','酒吧']): base_s += 0.5
+        if any(k in text_s for k in ['电竞馆','高端网咖','游戏主题乐园']): base_s -= 1.5
+        if any(k in text_s for k in ['娱乐匮乏','替代娱乐缺乏','无娱乐配套']): base_s += 2.0
+        if any(k in text_s for k in ['娱乐饱和','分流严重','选择极多']): base_s -= 2.0
+
+        s_substitute = max(0.0, min(10.0, base_s))
+
+        total = s_direct * 0.5 + s_potential * 0.3 + s_substitute * 0.2
+        return max(0.0, min(10.0, total))
     
     def calculate_esports_venue_score(self) -> float:
         """
