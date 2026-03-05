@@ -153,7 +153,7 @@ function addEsportsHotel() {
                 </div>
                 <div class="form-group">
                     <label>等级/星级</label>
-                    <input type="text" id="esports_hotel_grade_${esportsHotelsCount}" name="esports_hotel_grade" placeholder="三星级" />
+                    <input type="text" id="esports_hotel_grade_${esportsHotelsCount}" name="esports_hotel_grade" placeholder="例如：经济型、三星级" />
                 </div>
             </div>
         </div>
@@ -181,7 +181,7 @@ function addBusinessHotel() {
     const hotelHTML = `
         <div class="hotel-item" id="${hotelId}" data-index="${businessHotelsCount}">
             <div class="hotel-item-header">
-                <span class="hotel-item-title">商务酒店 #${businessHotelsCount}</span>
+                <span class="hotel-item-title">商务酒店 ${businessHotelsCount}</span>
                 <button type="button" class="btn-remove" onclick="removeBusinessHotel('${hotelId}')">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="18" y1="6" x2="6" y2="18"/>
@@ -209,7 +209,7 @@ function addBusinessHotel() {
                 </div>
                 <div class="form-group">
                     <label>等级/星级</label>
-                    <input type="text" id="business_hotel_grade_${businessHotelsCount}" name="business_hotel_grade" placeholder="四星级" />
+                    <input type="text" id="business_hotel_grade_${businessHotelsCount}" name="business_hotel_grade" placeholder="例如：中档、四星级" />
                 </div>
             </div>
         </div>
