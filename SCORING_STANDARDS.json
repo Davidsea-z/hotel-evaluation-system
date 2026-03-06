@@ -1,0 +1,436 @@
+{
+  "_meta": {
+    "title": "电竞酒店投资评估系统 · 四象限评分标准",
+    "version": "1.0",
+    "date": "2026-03-05",
+    "description": "本文件定义四个主维度及八个子维度的完整评分规则，供 AI Agent 读取后独立执行评分计算",
+    "scoring_range": "所有子维度满分均为 10 分",
+    "quadrant_formula": "综合得分 = Return×0.30 + Yield×0.25 + Risk×0.25 + Control×0.20",
+    "radar_note": "Risk 象限分越高代表风险越低，雷达图面积越大越好"
+  },
+
+  "quadrants": [
+
+    {
+      "id": "return",
+      "label": "回报",
+      "label_en": "Return",
+      "color": "#3b82f6",
+      "weight": 0.30,
+      "description": "衡量项目地理位置和客群基础所决定的回报天花板",
+      "formula": "Return = geographic_location × 0.4 + core_customer_flow × 0.6",
+      "sub_dimensions": [
+
+        {
+          "id": "geographic_location",
+          "label": "回报强度",
+          "color": "#3b82f6",
+          "quadrant_weight": 0.40,
+          "score_range": [0, 10],
+          "input_field": "geographic_location",
+          "input_type": "text",
+          "input_description": "地理位置描述文本，建议 20 字以上，含商圈/交通/周边配套关键词",
+          "algorithm": {
+            "type": "keyword_scoring",
+            "base_score": 5.0,
+            "keyword_groups": {
+              "high_value": {
+                "score_delta": 1.5,
+                "keywords": ["阿里巴巴", "杭师大", "未来科技城", "核心区", "商圈", "CBD", "高新区"]
+              },
+              "medium_value": {
+                "score_delta": 1.0,
+                "keywords": ["产业园", "大学城", "地铁站", "商业区", "交通枢纽"]
+              },
+              "low_value": {
+                "score_delta": -2.0,
+                "keywords": ["郊区", "偏远"]
+              }
+            },
+            "clamp": [0, 10]
+          },
+          "score_tiers": [
+            { "range": [9, 10], "label": "极优", "description": "CBD / 核心商圈 / 高校密集区 / 大型科技园区直达" },
+            { "range": [7, 8.9], "label": "良好", "description": "有地铁站 / 商业区 / 产业园附近" },
+            { "range": [5, 6.9], "label": "一般", "description": "普通住宅区或郊区边缘" },
+            { "range": [0, 4.9], "label": "偏弱", "description": "郊区 / 偏远地带，客流支撑不足" }
+          ],
+          "optimization_hint": "在描述中补充高价值关键词（核心区、CBD、地铁站）可提升得分"
+        },
+
+        {
+          "id": "core_customer_flow",
+          "label": "回报质量",
+          "color": "#60a5fa",
+          "quadrant_weight": 0.60,
+          "score_range": [0, 10],
+          "input_field": "core_customer_flow",
+          "input_type": "object",
+          "input_description": "三类客群的文字描述对象，每类建议 50 字以上",
+          "algorithm": {
+            "type": "weighted_text_scoring",
+            "customer_groups": [
+              {
+                "key": "企业年轻员工",
+                "weight": 0.40,
+                "score_by_length": [
+                  { "max_chars": 19, "score": 0 },
+                  { "max_chars": 49, "score": 6 },
+                  { "max_chars": 99, "score": 8 },
+                  { "min_chars": 100, "score": 9 }
+                ],
+                "bonus_keywords": {
+                  "score_delta": 0.5,
+                  "keywords": ["密集", "活跃", "需求旺盛", "消费能力强", "目标客群"]
+                }
+              },
+              {
+                "key": "高校学生",
+                "weight": 0.35,
+                "score_by_length": [
+                  { "max_chars": 19, "score": 0 },
+                  { "max_chars": 49, "score": 6 },
+                  { "max_chars": 99, "score": 8 },
+                  { "min_chars": 100, "score": 9 }
+                ],
+                "bonus_keywords": {
+                  "score_delta": 0.5,
+                  "keywords": ["密集", "活跃", "需求旺盛", "消费能力强", "目标客群"]
+                }
+              },
+              {
+                "key": "商旅与参会客群",
+                "weight": 0.25,
+                "score_by_length": [
+                  { "max_chars": 19, "score": 0 },
+                  { "max_chars": 49, "score": 6 },
+                  { "max_chars": 99, "score": 8 },
+                  { "min_chars": 100, "score": 9 }
+                ],
+                "bonus_keywords": {
+                  "score_delta": 0.5,
+                  "keywords": ["密集", "活跃", "需求旺盛", "消费能力强", "目标客群"]
+                }
+              }
+            ],
+            "final_formula": "total = Σ (subscore_i × weight_i)",
+            "clamp": [0, 10]
+          },
+          "score_tiers": [
+            { "range": [9, 10], "label": "极优", "description": "三类客群均有 100 字以上详细描述，含大量积极关键词" },
+            { "range": [7, 8.9], "label": "良好", "description": "主要客群有充分覆盖，描述具体" },
+            { "range": [5, 6.9], "label": "一般", "description": "部分客群描述不足 50 字" },
+            { "range": [0, 4.9], "label": "偏弱", "description": "客群描述过于简略或覆盖缺失" }
+          ],
+          "optimization_hint": "在描述中补充客群规模数字和消费特征词（密集、活跃、需求旺盛）可提升得分"
+        }
+
+      ]
+    },
+
+    {
+      "id": "yield",
+      "label": "收益",
+      "label_en": "Yield",
+      "color": "#10b981",
+      "weight": 0.25,
+      "description": "衡量联营模型下的日现金流规模与资金回流效率，对接滴灌通投资模型",
+      "formula": "Yield = pcf_yield × 0.5 + frequency × 0.5",
+      "investment_model_reference": {
+        "revpar_formula": "RevPAR = ADR × OCC × (1 - OTA%)",
+        "pcf_formula": "PCF(日) = 房间数 × RevPAR × 分成比例",
+        "pcf_monthly": "PCF(月) = PCF(日) × 30"
+      },
+      "sub_dimensions": [
+
+        {
+          "id": "pcf_yield",
+          "label": "利润空间",
+          "color": "#10b981",
+          "quadrant_weight": 0.50,
+          "score_range": [0, 10],
+          "input_field": "pcf_daily",
+          "input_type": "number",
+          "input_description": "投资方日现金流（元/天），由前端财务计算器自动计算后传入，公式：PCF日 = 房间数 × ADR × OCC × (1-OTA%) × 分成比例",
+          "algorithm": {
+            "type": "threshold_mapping",
+            "thresholds": [
+              { "min": 3000, "score": 10.0, "label": "极优", "description": "PCF ≥ 3000 元/天，现金流极为充裕" },
+              { "min": 2000, "score": 8.5,  "label": "优秀", "description": "PCF 2000–2999 元/天，收益质量优秀" },
+              { "min": 1000, "score": 7.0,  "label": "良好", "description": "PCF 1000–1999 元/天，收益规模合理" },
+              { "min": 500,  "score": 5.0,  "label": "一般", "description": "PCF 500–999 元/天，收益偏低" },
+              { "min": 200,  "score": 3.0,  "label": "偏弱", "description": "PCF 200–499 元/天，收益很低" },
+              { "min": 0,    "score": 1.5,  "label": "极弱", "description": "PCF < 200 元/天，项目财务可行性存疑" }
+            ]
+          },
+          "related_inputs": {
+            "adr": "平均每日房价（元/晚）",
+            "room_count": "参与联营的改造客房数量",
+            "occupancy_rate": "目标出租率（%）",
+            "ota_rate": "OTA 渠道占比（%，默认 9%）",
+            "profit_share_rate": "投资方分成比例（%，通常 8–15%）"
+          },
+          "sensitivity_reference": {
+            "note": "以 100 间 / 85% OCC / 9% OTA / 10% 分成为基准",
+            "adr_pcf_mapping": [
+              { "adr": 200, "pcf_daily": 1547 },
+              { "adr": 250, "pcf_daily": 1934 },
+              { "adr": 300, "pcf_daily": 2321 },
+              { "adr": 350, "pcf_daily": 2707 },
+              { "adr": 400, "pcf_daily": 3094 }
+            ]
+          },
+          "optimization_hint": "提升 ADR 或增加改造房间数是提升 PCF 最直接的手段"
+        },
+
+        {
+          "id": "frequency",
+          "label": "自动打款频率",
+          "color": "#34d399",
+          "quadrant_weight": 0.50,
+          "score_range": [0, 10],
+          "input_field": "irr_frequency",
+          "input_type": "enum",
+          "input_description": "联营分账频率，决定投资方现金流回收速度和 MIRR 高低",
+          "algorithm": {
+            "type": "enum_mapping",
+            "mapping": [
+              { "value": "daily",    "label": "日分账", "score": 10.0, "description": "每日自动到账，资金流动性最优，MIRR 最高" },
+              { "value": "weekly",   "label": "周分账", "score": 7.0,  "description": "每周到账，资金回流良好" },
+              { "value": "biweekly", "label": "双周分账", "score": 5.0, "description": "每两周到账，资金回流一般" },
+              { "value": "other",    "label": "其他/未填", "score": 3.0, "description": "频率不明或约定低频，资金安全性偏低" }
+            ]
+          },
+          "mirr_impact": {
+            "note": "分账越频繁 → 复投时间越早 → MIRR 越高",
+            "daily_vs_weekly_diff": "日分账通常比周分账高 2–5 个百分点",
+            "daily_vs_biweekly_diff": "日分账通常比双周分账高 4–8 个百分点"
+          },
+          "optimization_hint": "在合同谈判中争取日分账条款，可显著提升 MIRR 和资金安全感"
+        }
+
+      ]
+    },
+
+    {
+      "id": "risk",
+      "label": "风险",
+      "label_en": "Risk",
+      "color": "#ef4444",
+      "weight": 0.25,
+      "description": "衡量外部市场竞争压力，分越高代表风险越低（雷达图设计保持面积越大越好）",
+      "formula": "Risk = esports_venue × 0.4 + esports_hotel × 0.6",
+      "important_note": "⚠️ 本象限分数高 = 风险低 = 市场空白大，符合雷达图面积越大越好的视觉逻辑",
+      "sub_dimensions": [
+
+        {
+          "id": "esports_venue",
+          "label": "波动可控性",
+          "color": "#ef4444",
+          "quadrant_weight": 0.40,
+          "score_range": [0, 10],
+          "input_field": "esports_venue_distribution",
+          "input_type": "object",
+          "input_description": "3km 内各距离区间的电竞馆数量，馆越多代表客流分流风险越高",
+          "algorithm": {
+            "type": "threshold_mapping",
+            "total_formula": "total = 1km以内 + 1-2km + 2-3km",
+            "thresholds": [
+              { "max": 15,  "score": 9.5, "label": "极优", "description": "3km 内 ≤ 15 家，市场竞争健康，客流分流风险低" },
+              { "max": 20,  "score": 7.5, "label": "良好", "description": "3km 内 16–20 家，竞争较活跃，需差异化经营" },
+              { "max": 25,  "score": 6.0, "label": "一般", "description": "3km 内 21–25 家，竞争激烈，关注客流分流" },
+              { "max": 30,  "score": 4.0, "label": "偏高", "description": "3km 内 26–30 家，市场竞争激烈，风险较高" },
+              { "min": 31,  "score": 2.0, "label": "极高", "description": "3km 内 > 30 家，市场严重饱和，高风险" }
+            ]
+          },
+          "input_fields_detail": {
+            "1km以内": { "type": "integer", "min": 0, "description": "1km 范围内电竞馆数量" },
+            "1-2km":   { "type": "integer", "min": 0, "description": "1–2km 范围内电竞馆数量" },
+            "2-3km":   { "type": "integer", "min": 0, "description": "2–3km 范围内电竞馆数量" },
+            "备注":    { "type": "string",  "required": false, "description": "补充说明（可选）" }
+          },
+          "optimization_hint": "如果所在区域电竞馆密度高，建议强化差异化（高端设备、主题场景）以减少直接竞争"
+        },
+
+        {
+          "id": "esports_hotel",
+          "label": "生命周期可见性",
+          "color": "#f87171",
+          "quadrant_weight": 0.60,
+          "score_range": [0, 10],
+          "input_field": "esports_hotel_distribution",
+          "input_type": "array",
+          "input_description": "3km 内所有竞争电竞酒店列表，无竞品直接得满分",
+          "algorithm": {
+            "type": "competition_intensity",
+            "no_competitor_score": 10.0,
+            "competition_formula": "竞争强度分 = Σ (rooms_i × distance_weight_i)",
+            "distance_weights": [
+              { "range": "≤ 1km",    "weight": 0.8, "note": "最近竞品影响力最大" },
+              { "range": "1–2km",    "weight": 0.5 },
+              { "range": "2–3km",    "weight": 0.3 }
+            ],
+            "intensity_thresholds": [
+              { "max": 30,   "score": 10.0, "label": "极优", "description": "竞争强度极低，市场空白显著" },
+              { "max": 60,   "score": 8.0,  "label": "良好", "description": "竞争较少，先发优势明显" },
+              { "max": 100,  "score": 6.0,  "label": "一般", "description": "存在一定竞争压力" },
+              { "min": 101,  "score": 4.0,  "label": "偏高", "description": "竞争极为激烈，市场空间受压" }
+            ]
+          },
+          "array_item_schema": {
+            "name":        { "type": "string",  "required": true,  "description": "电竞酒店名称" },
+            "distance":    { "type": "float",   "required": true,  "unit": "km", "min": 0, "description": "距本项目距离" },
+            "rooms":       { "type": "integer", "required": true,  "description": "该酒店客房数量" },
+            "price_range": { "type": "string",  "required": false, "description": "价格区间，如 '199-299'" },
+            "grade":       { "type": "string",  "required": false, "description": "等级，如 '经济型'、'三星级'" }
+          },
+          "optimization_hint": "竞争激烈时，应打造独特的 IP 主题房型、会员体系或赛事场景，形成差异化护城河"
+        }
+
+      ]
+    },
+
+    {
+      "id": "control",
+      "label": "管控",
+      "label_en": "Control",
+      "color": "#8b5cf6",
+      "weight": 0.20,
+      "description": "衡量市场成熟度与运营差异化能力，反映项目的长期管控护城河",
+      "formula": "Control = business_hotel × 0.4 + differentiation × 0.6",
+      "sub_dimensions": [
+
+        {
+          "id": "business_hotel",
+          "label": "市场参照成熟度",
+          "color": "#8b5cf6",
+          "quadrant_weight": 0.40,
+          "score_range": [0, 10],
+          "input_field": "business_hotel_distribution",
+          "input_type": "array",
+          "input_description": "3km 内同档次商务酒店列表，适量商务酒店代表市场成熟、定价锚点健康",
+          "algorithm": {
+            "type": "total_rooms_threshold",
+            "total_formula": "total_rooms = Σ rooms_i",
+            "thresholds": [
+              { "total_rooms": 0,        "score": 6.0, "label": "偏弱", "description": "无商务酒店，商务氛围缺失，客流支撑不足" },
+              { "max_rooms": 100,        "score": 7.0, "label": "一般", "description": "总客房 ≤ 100 间，商务氛围一般" },
+              { "max_rooms": 300,        "score": 9.0, "label": "最优", "description": "总客房 101–300 间，商务氛围良好，价格锚点健康 ✅" },
+              { "max_rooms": 500,        "score": 8.0, "label": "良好", "description": "总客房 301–500 间，竞争开始显现但尚可" },
+              { "min_rooms": 501,        "score": 6.0, "label": "偏弱", "description": "总客房 > 500 间，竞争激烈，管控难度上升" }
+            ]
+          },
+          "array_item_schema": {
+            "name":        { "type": "string",  "required": true,  "description": "商务酒店名称" },
+            "distance":    { "type": "float",   "required": true,  "unit": "km", "min": 0, "description": "距本项目距离" },
+            "rooms":       { "type": "integer", "required": true,  "description": "客房数量" },
+            "price_range": { "type": "string",  "required": false, "description": "价格区间" },
+            "grade":       { "type": "string",  "required": false, "description": "等级，如 '四星级'、'中档'" }
+          },
+          "best_zone": {
+            "total_rooms": "100–300 间",
+            "reason": "代表市场已成熟但未过度饱和，定价锚点清晰，有利于电竞酒店高价定位"
+          },
+          "optimization_hint": "该指标主要由市场环境决定，选址时优先选择有 2–5 家中档商务酒店的区域"
+        },
+
+        {
+          "id": "differentiation",
+          "label": "差异化管控力",
+          "color": "#a78bfa",
+          "quadrant_weight": 0.60,
+          "score_range": [0, 10],
+          "input_field": "competitive_pattern",
+          "input_type": "object",
+          "input_description": "竞争格局的文字描述对象，从文本中提取差异化程度信号词",
+          "algorithm": {
+            "type": "keyword_sentiment_scoring",
+            "base_score": 5.0,
+            "analyzed_fields": ["直接竞品", "潜在竞品", "替代娱乐"],
+            "positive_keywords": {
+              "score_delta": 1.0,
+              "keywords": ["空白", "差异化", "独家", "唯一", "首家", "无竞品", "无直接"]
+            },
+            "negative_keywords": {
+              "score_delta": -0.8,
+              "keywords": ["激烈", "饱和", "多家", "竞争强", "红海"]
+            },
+            "clamp": [0, 10]
+          },
+          "input_fields_detail": {
+            "直接竞品": { "type": "string", "description": "3km 内直接竞品电竞酒店描述，含数量、定位、距离" },
+            "潜在竞品": { "type": "string", "description": "商务酒店、普通酒店等潜在竞争描述" },
+            "替代娱乐": { "type": "string", "description": "电影院、KTV、电竞馆等替代娱乐场所描述" }
+          },
+          "score_tiers": [
+            { "range": [8, 10], "label": "护城河强", "description": "描述含多个空白/独家/首家等正向词，差异化壁垒清晰" },
+            { "range": [6, 7.9], "label": "有差异化优势", "description": "存在一定差异化，竞争局势尚可" },
+            { "range": [4, 5.9], "label": "中性", "description": "未提供明显差异化或竞争信号" },
+            { "range": [0, 3.9], "label": "竞争激烈", "description": "描述含大量激烈/饱和/红海等负向词" }
+          ],
+          "optimization_hint": "在竞争格局描述中明确点明差异化策略（如独家 IP、唯一全沉浸场景、无直接竞品），可显著提升此项得分"
+        }
+
+      ]
+    }
+
+  ],
+
+  "comprehensive_scoring": {
+    "formula": "comprehensive_score = Return×0.30 + Yield×0.25 + Risk×0.25 + Control×0.20",
+    "max_score": 10,
+    "value_levels": [
+      { "min": 8.5,  "label": "高投资价值",   "recommendation": "强烈推荐投资", "color": "#10b981" },
+      { "min": 7.0,  "label": "较高投资价值", "recommendation": "推荐投资",     "color": "#3b82f6" },
+      { "min": 5.5,  "label": "中等投资价值", "recommendation": "谨慎投资，建议优化方案", "color": "#f59e0b" },
+      { "min": 0,    "label": "投资价值偏低", "recommendation": "不建议投资，风险较高",   "color": "#ef4444" }
+    ]
+  },
+
+  "conclusion_rules": {
+    "strengths": [
+      { "condition": "Return >= 8",  "text": "回报潜力强（{Return}分），地段与客群匹配度高" },
+      { "condition": "Yield >= 7",   "text": "收益质量优（{Yield}分），PCF现金流充裕且分账顺畅" },
+      { "condition": "Risk >= 8",    "text": "竞争风险低（{Risk}分），市场空白明显，先发优势突出" },
+      { "condition": "Control >= 7", "text": "管控能力强（{Control}分），差异化护城河清晰" }
+    ],
+    "risks": [
+      { "condition": "Return < 6",  "text": "回报维度偏弱（{Return}分），地理位置或客群覆盖不足" },
+      { "condition": "Yield < 5",   "text": "收益维度偏低（{Yield}分），PCF现金流或分账频率需优化" },
+      { "condition": "Risk < 6",    "text": "市场竞争较激烈（{Risk}分），电竞馆或同类酒店密集" },
+      { "condition": "Control < 5", "text": "管控能力薄弱（{Control}分），差异化优势不明显" }
+    ],
+    "suggestions": [
+      { "condition": "geographic_location < 7", "text": "建议选择靠近高校、产业园或核心商圈的位置以提升地段回报" },
+      { "condition": "pcf_yield < 5",           "text": "建议提升房间数量或ADR，扩大PCF日现金流规模" },
+      { "condition": "frequency < 7",           "text": "建议与投资方协商更高频的分账周期（如日分账），加速资金回收" },
+      { "condition": "esports_hotel < 6",       "text": "电竞酒店竞争较激烈，建议打造差异化主题房型或服务体验" },
+      { "condition": "differentiation < 6",     "text": "建议强化产品差异化，构建电竞IP、场景或会员体系壁垒" }
+    ]
+  },
+
+  "red_lines": {
+    "description": "以下任意条件成立时，综合分通常低于 5.5，建议直接预警",
+    "conditions": [
+      { "id": "RL-01", "field": "esports_hotel 竞争强度分", "condition": "> 100", "label": "多家大型电竞酒店紧邻", "severity": "high" },
+      { "id": "RL-02", "field": "pcf_daily",                "condition": "< 200", "label": "PCF日现金流极低，财务不可行", "severity": "high" },
+      { "id": "RL-03", "field": "geographic_location 文本",  "condition": "含'郊区'或'偏远'", "label": "地理位置偏远，客流支撑严重不足", "severity": "high" },
+      { "id": "RL-04", "field": "core_customer_flow 三类描述", "condition": "均 < 20字", "label": "客群描述严重不足，无法评估市场基础", "severity": "medium" },
+      { "id": "RL-05", "field": "YITO可行性",               "condition": "PCF(日) ≤ 总投资 × 日收益率", "label": "项目在当前参数下无法回本", "severity": "high" }
+    ]
+  },
+
+  "optimal_profile": {
+    "description": "雷达图各轴均接近满分的最优项目参考画像",
+    "targets": {
+      "geographic_location": { "target_score": "≥ 8", "condition": "核心商圈/高新区/CBD + 地铁直达" },
+      "core_customer_flow":  { "target_score": "≥ 8", "condition": "三类客群均有 ≥100字描述 + 积极关键词" },
+      "pcf_yield":           { "target_score": "≥ 8.5", "condition": "PCF日 ≥ 2000元（参考：100间×300ADR×85%OCC×10%分成÷0.91 ≈ 2,780元）" },
+      "frequency":           { "target_score": "10", "condition": "日分账（daily）" },
+      "esports_venue":       { "target_score": "9.5", "condition": "3km内电竞馆总数 ≤ 15家" },
+      "esports_hotel":       { "target_score": "≥ 10", "condition": "3km内无电竞酒店直接竞品，或竞争强度分 ≤ 30" },
+      "business_hotel":      { "target_score": "9", "condition": "3km内商务酒店总客房 100–300间" },
+      "differentiation":     { "target_score": "≥ 8", "condition": "竞争格局描述中含'空白'/'首家'/'独家'等正向词" }
+    }
+  }
+}
