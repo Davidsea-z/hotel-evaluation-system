@@ -888,17 +888,19 @@ async function exportAssessmentReport() {
         const esHotels  = fd.esports_hotel_distribution  || [];
         const bizHotels = fd.business_hotel_distribution || [];
 
+        const BAR_W = 120; // 进度条总宽度(px)，用像素避免html2canvas百分比渲染问题
         const dimRows = DIM_CONFIG.map(cfg => {
             const s = scores[cfg.key] ?? 0;
+            const fillPx = Math.round((s / 10) * BAR_W); // 像素值精确渲染
             return `<tr>
-              <td style="padding:8px 12px;font-weight:600;color:#1f2937;border-bottom:1px solid #f3f4f6;">
+              <td style="padding:8px 12px;font-weight:600;color:#1f2937;border-bottom:1px solid #f3f4f6;white-space:nowrap;">
                 <span style="display:inline-block;width:4px;height:14px;background:${cfg.color};border-radius:2px;vertical-align:middle;margin-right:8px;"></span>${cfg.label}
               </td>
               <td style="padding:8px 12px;color:#6b7280;font-size:12px;border-bottom:1px solid #f3f4f6;">${cfg.desc}</td>
-              <td style="padding:8px 12px;color:#6b7280;font-size:12px;border-bottom:1px solid #f3f4f6;">${cfg.weight}</td>
+              <td style="padding:8px 12px;color:#6b7280;font-size:12px;border-bottom:1px solid #f3f4f6;white-space:nowrap;">${cfg.weight}</td>
               <td style="padding:8px 12px;border-bottom:1px solid #f3f4f6;">
-                <div style="background:#e5e7eb;border-radius:999px;height:6px;width:100px;overflow:hidden;display:inline-block;vertical-align:middle;">
-                  <div style="width:${pct(s)}%;height:100%;background:${scoreColor(s)};border-radius:999px;"></div>
+                <div style="background:#e5e7eb;border-radius:999px;height:8px;width:${BAR_W}px;overflow:hidden;position:relative;">
+                  <div style="position:absolute;left:0;top:0;width:${fillPx}px;height:8px;background:${scoreColor(s)};border-radius:999px;"></div>
                 </div>
               </td>
               <td style="padding:8px 16px;font-size:1.1rem;font-weight:900;color:${scoreColor(s)};text-align:right;border-bottom:1px solid #f3f4f6;">${s}</td>
@@ -1058,15 +1060,18 @@ async function exportAssessmentReport() {
         </div>`;
 
         document.body.appendChild(printWrap);
-        // 等待渲染完成
-        await new Promise(r => setTimeout(r, 300));
+        // 等待布局完全渲染（延长至500ms确保百分比/像素均计算完毕）
+        await new Promise(r => setTimeout(r, 500));
 
         const canvas = await html2canvas(printWrap, {
             scale: 2,
             useCORS: true,
             allowTaint: true,
             backgroundColor: '#ffffff',
-            logging: false
+            logging: false,
+            removeContainer: false,
+            // 强制忽略不支持的CSS，避免渲染中断
+            ignoreElements: el => el.tagName === 'SCRIPT' || el.tagName === 'STYLE'
         });
 
         document.body.removeChild(printWrap);
