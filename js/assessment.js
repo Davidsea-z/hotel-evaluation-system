@@ -565,36 +565,168 @@ function displayAssessmentResult(data, formData) {
     displayConclusion(data.conclusion);
 }
 
-// 绘制四象限8轴雷达图
+// ============================================================
+// 手绘风格四象限雷达图
+// 轴顺序（顺时针，从顶部正上方开始）：
+//   0 现金流可靠性  （Risk  / 风险，红）   ← 顶部
+//   1 回报强度      （Return / 回报，蓝）
+//   2 回报质量      （Return / 回报，蓝）
+//   3 名声敏感度    （Control/ 管控，紫）
+//   4 Leverage管控力（Control/ 管控，紫）
+//   5 自动报数和打款（Yield  / 收益，绿）
+//   6 生意的利润率  （Yield  / 收益，绿）
+//   7 波动可控性    （Risk   / 风险，红）   ← 左侧
+//   （ 生命周期可见性 作为第8轴，实际用 esports_hotel 值 ）
+// NOTE: Chart.js radar 8轴，0轴固定在正上方，顺时针排列
+// ============================================================
 function drawRadarChart(scores) {
-    const ctx = document.getElementById('radarChart').getContext('2d');
+    const canvas = document.getElementById('radarChart');
+    const ctx = canvas.getContext('2d');
     if (window.assessmentRadarChart) window.assessmentRadarChart.destroy();
 
-    // 8个轴按象限顺序排列：回报→收益→风险→管控，每象限2轴
+    // ── 数据映射：参照手绘图轴位置 ──────────────────────────
+    // 顺时针从顶部：风险上→回报右上→回报右→管控右下→管控下→收益左下→收益左→风险左
     const labels = [
-        '回报强度', '回报质量',         // 回报 蓝
-        '利润空间', '自动打款频率',       // 收益 绿
-        '波动可控性', '生命周期可见性',   // 风险 红
-        '市场参照成熟度', '差异化管控力', // 管控 紫
-    ];
-    const dataPoints = [
-        scores.geographic_location ?? 0,
-        scores.core_customer_flow  ?? 0,
-        scores.pcf_yield           ?? 0,
-        scores.frequency           ?? 0,
-        scores.esports_venue       ?? 0,
-        scores.esports_hotel       ?? 0,
-        scores.business_hotel      ?? 0,
-        scores.differentiation     ?? 0,
+        '现金流可靠性',    // 0  顶  Risk
+        '回报强度',        // 1  右上 Return
+        '回报质量',        // 2  右   Return
+        '名声敏感度',      // 3  右下 Control
+        'Leverage管控力',  // 4  下   Control
+        '自动报数和打款',  // 5  左下 Yield
+        '生意的利润率',    // 6  左   Yield
+        '波动可控性',      // 7  左上 Risk (生命周期可见性作为此轴)
     ];
 
-    // 象限颜色映射（每2个轴一色）
-    const quadrantColors = [
-        '#3b82f6', '#3b82f6', // 回报
-        '#10b981', '#10b981', // 收益
-        '#ef4444', '#ef4444', // 风险
-        '#8b5cf6', '#8b5cf6', // 管控
+    // 数据：现金流可靠性 ≈ esports_hotel（竞争越少现金流越稳）
+    const dataPoints = [
+        scores.esports_hotel       ?? 0,  // 0 现金流可靠性
+        scores.geographic_location ?? 0,  // 1 回报强度
+        scores.core_customer_flow  ?? 0,  // 2 回报质量
+        scores.business_hotel      ?? 0,  // 3 名声敏感度
+        scores.differentiation     ?? 0,  // 4 Leverage管控力
+        scores.frequency           ?? 0,  // 5 自动报数和打款
+        scores.pcf_yield           ?? 0,  // 6 生意的利润率
+        scores.esports_venue       ?? 0,  // 7 波动可控性
     ];
+
+    // ── 四象限着色：每轴对应象限 ──────────────────────────
+    // 顶轴0/左轴7 → 风险红；右上1/右2 → 回报蓝；
+    // 右下3/下4 → 管控紫；左下5/左6 → 收益绿
+    const axisQuadrant = ['risk','return','return','control','control','yield','yield','risk'];
+    const QUAD_COLOR = {
+        return:  { main:'#3b82f6', fill:'rgba(59,130,246,0.18)',  label:'回报\nReturn' },
+        yield:   { main:'#22c55e', fill:'rgba(34,197,94,0.18)',   label:'收益够不够' },
+        risk:    { main:'#ef4444', fill:'rgba(239,68,68,0.18)',   label:'风险\nRisk' },
+        control: { main:'#8b5cf6', fill:'rgba(139,92,246,0.18)', label:'管控够不够' },
+    };
+    const pointColors = dataPoints.map((_, i) => QUAD_COLOR[axisQuadrant[i]].main);
+
+    // ── 手绘象限背景插件 ──────────────────────────────────
+    const quadrantBgPlugin = {
+        id: 'quadrantBackground',
+        beforeDraw(chart) {
+            const { ctx, scales: { r } } = chart;
+            if (!r) return;
+            const cx = r.xCenter, cy = r.yCenter;
+            const maxR = r.drawingArea;
+            const n = 8;
+            const step = (2 * Math.PI) / n;
+            // 轴角度：Chart.js 从正上方(-π/2)开始，顺时针
+            const angleOf = i => -Math.PI / 2 + i * step;
+
+            // 绘制象限扇形（每象限2轴，共4象限）
+            // 象限顺序：[0,1]→Risk, [1,2]→Return, [2,3]→Return跨越到Control...
+            // 按图像：右上=蓝回报，右下=紫管控，左下=绿收益，左上=红风险
+            const sectors = [
+                { from: 0, to: 2, color: 'rgba(239,68,68,0.12)',    stroke:'rgba(239,68,68,0.25)' },  // 轴0-1: 风险→回报 上半右
+                { from: 1, to: 3, color: 'rgba(59,130,246,0.12)',   stroke:'rgba(59,130,246,0.25)' }, // 轴1-2: 回报
+                { from: 2, to: 4, color: 'rgba(139,92,246,0.10)',   stroke:'rgba(139,92,246,0.25)' }, // 轴2-3: 管控过渡
+                { from: 3, to: 5, color: 'rgba(139,92,246,0.12)',   stroke:'rgba(139,92,246,0.25)' }, // 轴3-4: 管控
+                { from: 4, to: 6, color: 'rgba(34,197,94,0.10)',    stroke:'rgba(34,197,94,0.25)' },  // 轴4-5: 收益过渡
+                { from: 5, to: 7, color: 'rgba(34,197,94,0.12)',    stroke:'rgba(34,197,94,0.25)' },  // 轴5-6: 收益
+                { from: 6, to: 8, color: 'rgba(239,68,68,0.10)',    stroke:'rgba(239,68,68,0.25)' },  // 轴6-7: 风险过渡
+                { from: 7, to: 9, color: 'rgba(239,68,68,0.08)',    stroke:'rgba(239,68,68,0.20)' },  // 轴7-0: 风险
+            ];
+
+            sectors.forEach(s => {
+                const a1 = angleOf(s.from), a2 = angleOf(s.to);
+                ctx.save();
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.arc(cx, cy, maxR, a1, a2);
+                ctx.closePath();
+                ctx.fillStyle = s.color;
+                ctx.fill();
+                ctx.restore();
+            });
+
+            // 手绘风格：用虚线画四条分隔轴线（0°/90°/180°/270°）
+            ctx.save();
+            ctx.setLineDash([4, 4]);
+            ctx.strokeStyle = 'rgba(100,100,100,0.2)';
+            ctx.lineWidth = 1;
+            [[0, -maxR],[maxR, 0],[0, maxR],[-maxR, 0]].forEach(([dx, dy]) => {
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.lineTo(cx + dx, cy + dy);
+                ctx.stroke();
+            });
+            ctx.setLineDash([]);
+            ctx.restore();
+        },
+        afterDraw(chart) {
+            const { ctx, scales: { r }, width, height } = chart;
+            if (!r) return;
+            const cx = r.xCenter, cy = r.yCenter;
+            const maxR = r.drawingArea;
+            const pad = 36;
+
+            // ── 四象限大标签（仿手绘图边角文字）──
+            const qLabels = [
+                { text: ['风险', 'Risk'],       x: cx - maxR - pad,      y: cy - maxR * 0.55, align: 'right',  color: '#ef4444' },
+                { text: ['回报', 'Return'],      x: cx + maxR + pad,      y: cy - maxR * 0.55, align: 'left',   color: '#3b82f6' },
+                { text: ['管控够不够'],           x: cx + maxR + pad,      y: cy + maxR * 0.55, align: 'left',   color: '#8b5cf6' },
+                { text: ['收益够不够'],           x: cx - maxR - pad,      y: cy + maxR * 0.55, align: 'right',  color: '#22c55e' },
+            ];
+
+            qLabels.forEach(q => {
+                ctx.save();
+                ctx.textAlign = q.align;
+                ctx.textBaseline = 'middle';
+                q.text.forEach((line, li) => {
+                    const isEn = /[a-zA-Z]/.test(line);
+                    ctx.font = isEn
+                        ? `italic 600 13px "Georgia", serif`
+                        : `900 15px "PingFang SC","Microsoft YaHei",sans-serif`;
+                    ctx.fillStyle = q.color;
+                    ctx.globalAlpha = 0.85;
+                    ctx.fillText(line, q.x, q.y + li * 19);
+                });
+                ctx.restore();
+            });
+
+            // ── 在各轴末端画刻度值标注（模仿手绘图轴上的数字）──
+            const n = 8, step = (2 * Math.PI) / n;
+            const ticks = [2, 6, 8, 10];
+            ticks.forEach(t => {
+                const rr = (t / 10) * maxR;
+                for (let i = 0; i < n; i++) {
+                    const angle = -Math.PI / 2 + i * step;
+                    const tx = cx + rr * Math.cos(angle);
+                    const ty = cy + rr * Math.sin(angle);
+                    if (i === 0) { // 只在顶轴标注刻度数字
+                        ctx.save();
+                        ctx.fillStyle = 'rgba(120,80,60,0.7)';
+                        ctx.font = '10px "Georgia",serif';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'bottom';
+                        ctx.fillText(String(t), tx + 2, ty - 3);
+                        ctx.restore();
+                    }
+                }
+            });
+        }
+    };
 
     window.assessmentRadarChart = new Chart(ctx, {
         type: 'radar',
@@ -604,45 +736,87 @@ function drawRadarChart(scores) {
                 label: '维度得分',
                 data: dataPoints,
                 fill: true,
-                backgroundColor: 'rgba(99,102,241,0.15)',
-                borderColor: 'rgba(99,102,241,0.8)',
-                borderWidth: 2.5,
-                pointBackgroundColor: quadrantColors,
-                pointBorderColor: '#fff',
+                backgroundColor: 'rgba(50,50,50,0.07)',
+                borderColor: 'rgba(40,40,40,0.75)',
+                borderWidth: 2.2,
+                borderCapStyle: 'round',
+                borderJoinStyle: 'round',
+                pointBackgroundColor: pointColors,
+                pointBorderColor: 'rgba(255,255,255,0.9)',
                 pointBorderWidth: 2,
                 pointRadius: 5,
                 pointHoverRadius: 7,
+                tension: 0.08,
             }]
         },
         options: {
             responsive: true,
-            elements: { line: { borderWidth: 2.5 } },
+            animation: { duration: 900, easing: 'easeOutQuart' },
+            elements: { line: { borderWidth: 2.2 } },
             scales: {
                 r: {
                     suggestedMin: 0,
                     suggestedMax: 10,
-                    ticks: { stepSize: 2, font: { size: 10 }, color: '#9ca3af' },
-                    grid: { color: 'rgba(0,0,0,0.06)' },
-                    angleLines: { color: 'rgba(0,0,0,0.08)' },
+                    ticks: {
+                        stepSize: 2,
+                        display: false,   // 隐藏默认刻度，用插件手绘数字
+                        backdropColor: 'transparent',
+                    },
+                    grid: {
+                        color: 'rgba(80,60,40,0.13)',
+                        lineWidth: 1,
+                        circular: false,
+                    },
+                    angleLines: {
+                        color: 'rgba(80,60,40,0.18)',
+                        lineWidth: 1,
+                    },
                     pointLabels: {
-                        font: { size: 11, weight: '600' },
-                        color: (ctx) => quadrantColors[ctx.index] || '#374151',
-                    }
+                        padding: 10,
+                        font: ctx2 => {
+                            const label = labels[ctx2.index] || '';
+                            return {
+                                size: label.length > 6 ? 10 : 11,
+                                weight: '700',
+                                family: '"PingFang SC","Microsoft YaHei",sans-serif',
+                            };
+                        },
+                        color: ctx2 => {
+                            const q = axisQuadrant[ctx2.index];
+                            return QUAD_COLOR[q]?.main || '#374151';
+                        },
+                    },
                 }
             },
             plugins: {
                 legend: { display: false },
                 tooltip: {
+                    backgroundColor: 'rgba(255,252,245,0.97)',
+                    titleColor: '#1f2937',
+                    bodyColor: '#374151',
+                    borderColor: 'rgba(180,160,120,0.4)',
+                    borderWidth: 1,
+                    cornerRadius: 8,
                     callbacks: {
-                        label: (item) => {
-                            const qLabels = ['回报','回报','收益','收益','风险','风险','管控','管控'];
-                            return ` ${qLabels[item.dataIndex]}·${item.label}：${item.raw} 分`;
+                        title: items => labels[items[0].dataIndex],
+                        label: item => {
+                            const qMap = { risk:'风险', return:'回报', yield:'收益', control:'管控' };
+                            const q = axisQuadrant[item.dataIndex];
+                            return ` ${qMap[q]} · ${item.raw} 分`;
                         }
                     }
                 }
             }
-        }
+        },
+        plugins: [quadrantBgPlugin],
     });
+
+    // ── 画布背景：米黄色仿纸张 ──
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-over';
+    ctx.fillStyle = '#faf8f2';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
 }
 
 // 显示评估结论

@@ -794,11 +794,14 @@
 
                 <!-- ③ 雷达图 + 关键数据 -->
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
-                    <div style="background:white;border-radius:16px;padding:1.5rem;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
-                        <h3 style="font-size:1rem;font-weight:700;color:#1f2937;margin:0 0 1rem;display:flex;align-items:center;gap:0.5rem;">
-                            <span style="width:4px;height:18px;background:#6366f1;border-radius:2px;display:inline-block;"></span>能力雷达图
+                    <div style="background:#faf8f2;border-radius:16px;padding:1.5rem;box-shadow:0 2px 12px rgba(0,0,0,0.08);border:1px solid rgba(180,160,100,0.2);">
+                        <h3 style="font-size:1rem;font-weight:700;color:#5c4a2a;margin:0 0 1rem;display:flex;align-items:center;gap:0.5rem;font-family:'PingFang SC','Microsoft YaHei',sans-serif;">
+                            <span style="width:4px;height:18px;background:linear-gradient(180deg,#ef4444,#3b82f6,#22c55e,#8b5cf6);border-radius:2px;display:inline-block;"></span>
+                            资产端评估雷达图（0–10）
                         </h3>
-                        <canvas id="radarChart"></canvas>
+                        <div style="position:relative;width:100%;padding-bottom:100%;min-height:320px;">
+                            <canvas id="radarChart" style="position:absolute;top:0;left:0;width:100%;height:100%;"></canvas>
+                        </div>
                     </div>
                     <div style="background:white;border-radius:16px;padding:1.5rem;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
                         <h3 style="font-size:1rem;font-weight:700;color:#1f2937;margin:0 0 1rem;display:flex;align-items:center;gap:0.5rem;">
