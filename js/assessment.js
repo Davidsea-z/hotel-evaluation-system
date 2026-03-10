@@ -4,16 +4,15 @@
 
 // 后端API配置 - 自动检测环境
 const API_BASE_URL = (() => {
-    // 如果是本地开发环境
+    // 本地开发（Flask后端）
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         return 'http://localhost:5000/api';
     }
-    // 如果是沙箱环境，使用5000端口的公共URL
+    // 沙箱环境（Novita），Flask后端在5000端口
     if (window.location.hostname.includes('sandbox.novita.ai')) {
-        // 将3000端口改为5000端口
         return window.location.protocol + '//' + window.location.hostname.replace('3000-', '5000-') + '/api';
     }
-    // 默认使用相对路径
+    // Cloudflare Pages / 其他生产环境：使用同域 Pages Functions
     return '/api';
 })();
 
